@@ -1,0 +1,194 @@
+
+==========================================================================================
+ORB EDGE BACKTEST RESULTS
+==========================================================================================
+
+1. OVERVIEW
+   Unique tickers:        1874
+   Total ticker-days:     153079
+   Triggered (breakout):  9186 (6.0%)
+   Not triggered:         143893
+
+2. WIN RATE BY R:R TARGET (n=9186 triggered trades)
+   Target           Win Rate  Stopped   EV/Trade
+   --------------------------------------------------
+   1:1 (1R)            52.4%    33.7%     +0.05R
+   1:2 (2R)            28.6%    33.7%     -0.14R
+   1:3 (3R)            13.9%    33.7%     -0.44R
+   1:4 (4R)             6.8%    33.7%     -0.66R
+
+   Trailing Stop (BE after 1R):  avg +1.05R  median +0.80R  (n=3368)
+
+   Max Favorable Excursion:  P25=+0.3R  P50=+0.7R  P75=+1.4R  P90=+2.3R  avg=+1.1R
+
+3. R-DISTRIBUTION (where do winners peak?)
+   Stopped before 1R:     2697 ( 29.4%)
+   Reached 1R not 2R:     2168 ( 23.6%)
+   Reached 2R not 3R:      740 (  8.1%)
+   Reached 3R not 4R:      272 (  3.0%)
+   Reached 4R+:            227 (  2.5%)
+   No resolution (EOD):   3082 ( 33.6%)
+
+4. WIN RATE BY SECTOR (at 1:3 R:R)
+   Sector                        N  WinRate  StopRate   AvgMFE
+   ----------------------------------------------------------
+   WHOLESALE-INDUSTRIAL MACHINERY & EQUIPMENT     9    33.3%     11.1%    +4.0R
+   FOOTWEAR, (NO RUBBER)         6    33.3%     16.7%    +1.7R
+   RETAIL-MISCELLANEOUS SHOPPING GOODS STORES     7    28.6%     14.3%    +1.2R
+   COATING, ENGRAVING & ALLIED SERVICES     8    25.0%     25.0%    +1.5R
+   Communication Services        9    22.2%     11.1%    +1.5R
+   HEATING EQUIPMENT, EXCEPT ELECTRIC & WARM AIR FURNACES    10    20.0%     30.0%    +1.6R
+   JEWELRY, SILVERWARE & PLATED WARE     5    20.0%    100.0%    +2.3R
+   SERVICES-ENGINEERING SERVICES     5    20.0%     20.0%    +1.2R
+   RETAIL-HOBBY, TOY & GAME SHOPS     5    20.0%     40.0%    +1.6R
+   TELEPHONE & TELEGRAPH APPARATUS     6    16.7%     16.7%    +1.7R
+   SERVICES-MISC HEALTH & ALLIED SERVICES, NEC     6    16.7%     33.3%    +1.5R
+   FEDERAL & FEDERALLY-SPONSORED CREDIT AGENCIES     6    16.7%     33.3%    +3.1R
+   CABLE & OTHER PAY TELEVISION SERVICES     7    14.3%     28.6%    +1.6R
+   FARM MACHINERY & EQUIPMENT     7    14.3%     14.3%    +1.7R
+   NATURAL GAS TRANSMISSION      7    14.3%     14.3%    +1.4R
+   MINING & QUARRYING OF NONMETALLIC MINERALS (NO FUELS)     8    12.5%     50.0%    +1.8R
+   SERVICES-COMPUTER PROCESSING & DATA PREPARATION    32    12.5%     28.1%    +1.3R
+   NATIONAL COMMERCIAL BANKS    41    12.2%     19.5%    +1.2R
+   Energy                        9    11.1%     11.1%    +1.3R
+   ELECTRICAL INDUSTRIAL APPARATUS     9    11.1%     33.3%    +1.1R
+   RETAIL-AUTO DEALERS & GASOLINE STATIONS     9    11.1%     33.3%    +1.3R
+   SERVICES-MANAGEMENT CONSULTING SERVICES    10    10.0%     30.0%    +1.1R
+   Healthcare                   30    10.0%     46.7%    +1.0R
+   Technology                   10    10.0%     20.0%    +1.2R
+   ORDNANCE & ACCESSORIES, (NO VEHICLES/GUIDED MISSILES)    10    10.0%     20.0%    +1.0R
+   DRAWING & INSULATING OF NONFERROUS WIRE    10    10.0%     50.0%    +1.1R
+   Consumer Cyclical            31     9.7%     45.2%    +1.2R
+   ENGINES & TURBINES           12     8.3%     50.0%    +0.9R
+   Agriculture                  27     7.4%     29.6%    +1.3R
+   PHARMACEUTICAL PREPARATIONS   123     7.3%     39.8%    +1.1R
+   ELECTROMEDICAL & ELECTROTHERAPEUTIC APPARATUS    14     7.1%     21.4%    +1.1R
+   PERSONAL CREDIT INSTITUTIONS    14     7.1%     14.3%    +1.1R
+   SEMICONDUCTORS & RELATED DEVICES    44     6.8%     31.8%    +1.1R
+   INVESTMENT ADVICE            45     6.7%     26.7%    +1.1R
+   Mining                      300     6.3%     32.0%    +1.2R
+   Wholesale Trade             159     6.3%     35.2%    +1.1R
+   Services                   1259     6.3%     32.9%    +1.1R
+   SERVICES-TO DWELLINGS & OTHER BUILDINGS    16     6.2%     37.5%    +1.0R
+   Financial Services         1543     5.9%     30.8%    +1.1R
+   Utilities                   269     5.6%     32.7%    +1.1R
+   SERVICES-COMPUTER INTEGRATED SYSTEMS DESIGN    18     5.6%     27.8%    +1.0R
+   Retail Trade                396     5.3%     35.1%    +1.1R
+   Manufacturing              2757     5.3%     35.4%    +1.1R
+   STATE COMMERCIAL BANKS       98     5.1%     28.6%    +1.0R
+   SERVICES-EDUCATIONAL SERVICES    21     4.8%     33.3%    +1.2R
+   Unknown                     367     4.6%     38.1%    +1.1R
+   REAL ESTATE INVESTMENT TRUSTS    67     4.5%     32.8%    +1.1R
+   CONSTRUCTION - SPECIAL TRADE CONTRACTORS    23     4.3%     30.4%    +1.0R
+   SERVICES-PREPACKAGED SOFTWARE    50     4.0%     44.0%    +1.0R
+   Transportation              296     3.7%     34.5%    +1.0R
+   Construction                194     3.1%     35.1%    +1.0R
+   SERVICES-BUSINESS SERVICES, NEC    33     3.0%     30.3%    +0.9R
+   MOTOR VEHICLE PARTS & ACCESSORIES    34     2.9%     23.5%    +1.1R
+   RETAIL-EATING PLACES         26     0.0%     23.1%    +1.1R
+   STEEL PIPE & TUBES            9     0.0%     77.8%    +0.6R
+   SERVICES-COMPUTER PROGRAMMING, DATA PROCESSING, ETC.    19     0.0%     26.3%    +0.9R
+   COMPUTER COMMUNICATIONS EQUIPMENT     7     0.0%     14.3%    +0.7R
+   SERVICES-DETECTIVE, GUARD & ARMORED CAR SERVICES     9     0.0%     11.1%    +0.6R
+   SURETY INSURANCE              6     0.0%     50.0%    +1.1R
+   HOUSEHOLD APPLIANCES          6     0.0%     16.7%    +0.7R
+   ELECTRONIC CONNECTORS         7     0.0%     14.3%    +0.8R
+   HOTELS & MOTELS              10     0.0%     40.0%    +0.8R
+   RETAIL-AUTO & HOME SUPPLY STORES     9     0.0%     33.3%    +0.9R
+   REAL ESTATE OPERATORS (NO DEVELOPERS) & LESSORS     5     0.0%     20.0%    +0.8R
+   SECURITY BROKERS, DEALERS & FLOTATION COMPANIES     5     0.0%      0.0%    +0.9R
+   PAINTS, VARNISHES, LACQUERS, ENAMELS & ALLIED PRODS     6     0.0%     33.3%    +0.6R
+   WATER SUPPLY                 15     0.0%     60.0%    +0.5R
+   RETAIL-SHOE STORES            5     0.0%     20.0%    +1.7R
+   RETAIL-RADIO, TV & CONSUMER ELECTRONICS STORES     5     0.0%      0.0%    +0.7R
+   FINANCE SERVICES              6     0.0%     33.3%    +0.9R
+   FATS & OILS                   6     0.0%     33.3%    +0.5R
+   AIRCRAFT PARTS & AUXILIARY EQUIPMENT, NEC     6     0.0%     16.7%    +1.0R
+   BITUMINOUS COAL & LIGNITE SURFACE MINING     7     0.0%     28.6%    +0.9R
+   RETAIL-LUMBER & OTHER BUILDING MATERIALS DEALERS     7     0.0%     28.6%    +0.6R
+   TRANSPORTATION SERVICES       6     0.0%     50.0%    +0.9R
+   SPECIAL INDUSTRY MACHINERY, NEC     7     0.0%     14.3%    +1.0R
+   WHOLESALE-ELECTRONIC PARTS & EQUIPMENT, NEC     6     0.0%     66.7%    +0.7R
+   CRUDE PETROLEUM & NATURAL GAS    18     0.0%     38.9%    +0.9R
+   Real Estate                   5     0.0%     20.0%    +1.0R
+   MISCELLANEOUS ELECTRICAL MACHINERY, EQUIPMENT & SUPPLIES    10     0.0%     70.0%    +0.8R
+   RETAIL-DEPARTMENT STORES      6     0.0%     16.7%    +0.6R
+   BIOLOGICAL PRODUCTS, (NO DIAGNOSTIC SUBSTANCES)    26     0.0%     42.3%    +0.7R
+   RETAIL-FAMILY CLOTHING STORES    10     0.0%     30.0%    +0.7R
+   CONSTRUCTION MACHINERY & EQUIP    12     0.0%     33.3%    +0.9R
+   GLASS PRODUCTS, MADE OF PURCHASED GLASS     5     0.0%     80.0%    +0.4R
+   ORTHOPEDIC, PROSTHETIC & SURGICAL APPLIANCES & SUPPLIES     8     0.0%     12.5%    +1.2R
+   NATURAL GAS DISTRIBUTION      8     0.0%     37.5%    +0.7R
+   AIR-COND & WARM AIR HEATG EQUIP & COMM & INDL REFRIG EQUIP    19     0.0%     26.3%    +0.9R
+   REAL ESTATE                  19     0.0%     47.4%    +1.0R
+   PLASTIC MATERIALS, SYNTH RESINS & NONVULCAN ELASTOMERS    16     0.0%     25.0%    +0.9R
+   Basic Materials              13     0.0%     38.5%    +0.8R
+   SERVICES-CHILD DAY CARE SERVICES     8     0.0%     37.5%    +1.0R
+   SERVICES-EQUIPMENT RENTAL & LEASING, NEC     7     0.0%     42.9%    +0.9R
+   SECURITY & COMMODITY BROKERS, DEALERS, EXCHANGES & SERVICES     6     0.0%     50.0%    +1.2R
+   ELECTRIC & OTHER SERVICES COMBINED    10     0.0%     50.0%    +0.7R
+   WHOLESALE-LUMBER & OTHER CONSTRUCTION MATERIALS    11     0.0%     36.4%    +1.0R
+   SURGICAL & MEDICAL INSTRUMENTS & APPARATUS    32     0.0%     25.0%    +0.7R
+   FIRE, MARINE & CASUALTY INSURANCE    24     0.0%     33.3%    +0.9R
+   SERVICES-HOME HEALTH CARE SERVICES     5     0.0%     20.0%    +1.2R
+   PATENT OWNERS & LESSORS       8     0.0%     62.5%    +0.9R
+   SAVINGS INSTITUTION, FEDERALLY CHARTERED     8     0.0%     25.0%    +1.1R
+   AIRCRAFT                     14     0.0%     14.3%    +1.1R
+   RETAIL-EATING & DRINKING PLACES     8     0.0%     12.5%    +1.1R
+   INDUSTRIAL INSTRUMENTS FOR MEASUREMENT, DISPLAY, AND CONTROL     5     0.0%     20.0%    +1.0R
+   RETAIL-VARIETY STORES         7     0.0%     14.3%    +0.6R
+   SERVICES-HELP SUPPLY SERVICES    12     0.0%     58.3%    +0.7R
+   SERVICES-SPECIALTY OUTPATIENT FACILITIES, NEC     7     0.0%     14.3%    +1.0R
+   INSURANCE AGENTS, BROKERS & SERVICE    28     0.0%     25.0%    +0.8R
+   OPERATIVE BUILDERS            5     0.0%     40.0%    +0.8R
+   RETAIL-RETAIL STORES, NEC     6     0.0%     50.0%    +0.4R
+   TOTALIZING FLUID METERS & COUNTING DEVICES     7     0.0%     71.4%    +0.4R
+
+5. WIN RATE BY CONVICTION BUCKET (at 1:3 R:R)
+   Conviction       N  WinRate  StopRate   AvgMFE
+   ----------------------------------------------
+   75-85         6360     5.5%     33.6%    +1.1R
+   85-100        2826     5.3%     33.9%    +1.1R
+
+6. WIN RATE BY PHASE (at 1:3 R:R)
+   Phase                N  WinRate  StopRate   AvgMFE
+   --------------------------------------------------
+   EARLY_ACCUM       3488     5.6%     34.0%    +1.1R
+   ACTIVE_ACCUM      5698     5.3%     33.5%    +1.1R
+
+7. SQUEEZE SCORE IMPACT (at 1:3 R:R)
+
+8. BEST COMBINATIONS (at 1:3 R:R, min 10 trades)
+   Phase          Conv     Sector                N      WR     MFE
+   --------------------------------------------------------------
+   EARLY_ACCUM    75+      Healthcare           15   20.0%   +1.1R
+   EARLY_ACCUM    75+      SEMICONDUCTORS & RELATED DEVICES   12   16.7%   +1.3R
+   ACTIVE_ACCUM   75+      Agriculture          14   14.3%   +1.7R
+   ACTIVE_ACCUM   75+      SERVICES-COMPUTER PROCESSING & DATA PREPARATION   28   14.3%   +1.3R
+   ACTIVE_ACCUM   75+      NATIONAL COMMERCIAL BANKS   32   12.5%   +1.2R
+   ACTIVE_ACCUM   75+      Consumer Cyclical    19   10.5%   +1.1R
+   ACTIVE_ACCUM   75+      SERVICES-MANAGEMENT CONSULTING SERVICES   10   10.0%   +1.1R
+   EARLY_ACCUM    75+      Wholesale Trade      83    9.6%   +1.1R
+   ACTIVE_ACCUM   75+      PHARMACEUTICAL PREPARATIONS   67    9.0%   +1.2R
+   EARLY_ACCUM    75+      Consumer Cyclical    12    8.3%   +1.5R
+   EARLY_ACCUM    75+      ?                    41    7.3%   +1.1R
+   ACTIVE_ACCUM   75+      ELECTROMEDICAL & ELECTROTHERAPEUTIC APPARATUS   14    7.1%   +1.1R
+   EARLY_ACCUM    75+      Financial Services  681    6.9%   +1.2R
+   ACTIVE_ACCUM   75+      SERVICES-PREPACKAGED SOFTWARE   29    6.9%   +1.2R
+   ACTIVE_ACCUM   75+      Mining              218    6.4%   +1.2R
+
+9. BREAKOUT TIMING
+   Time     Triggers 3R WinRate
+   ------------------------------
+   09:45        3984       6.3%
+   09:50        1617       5.3%
+   09:55         797       5.3%
+   10:00         919       4.5%
+   10:05         497       4.6%
+   10:10         399       6.0%
+   10:15         348       3.4%
+   10:20         326       4.0%
+   10:25         251       2.4%
+   10:30          48       6.2%
+
+==========================================================================================

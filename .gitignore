@@ -1,0 +1,17 @@
+__pycache__/
+*.pyc
+
+data/raw/
+data/processed/
+data/warehouse/
+data/meta/
+*.duckdb
+*.parquet
+
+# Local runtime databases
+signal_scanner/data/*.db
+signal_scanner/data/*.db-shm
+signal_scanner/data/*.db-wal
+
+# Secrets
+.env

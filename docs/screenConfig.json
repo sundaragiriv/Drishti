@@ -1,0 +1,1214 @@
+{
+   "layout": {
+      "actionGroups": [],
+      "groups": [
+         {
+            "title": "details_group",
+            "fields": [
+               "activity.subject",
+               "activity.id",
+               "activity.code",
+               "activity.sourceActivity",
+               "activity.hazardType",
+               "serviceCall.id",
+               "activity.status",
+               "activity.executionStage",
+               "serviceAssignment.state",
+               "activity.businessPartner",
+               "activity.serviceProduct",
+               "activity.subType",
+               "activity.topic"
+            ]
+         },
+         {
+            "title": "equipment_group",
+            "fields": [
+               "activity.equipment",
+               "activity.equipment.serialNumber",
+               "activity.equipment.manufacturerSerialNumber",
+               "activity.equipment.remarks"
+            ]
+         },
+         {
+            "title": "remarks_group",
+            "fields": [
+               "activity.remarks",
+               "udfMeta.Z_Calendar_Event"
+            ]
+         },
+         {
+            "title": "dispatching_group",
+            "fields": [
+               "activity.earliestStartDateTime",
+               "activity.dueDateTime",
+               "activity.startDateTime",
+               "activity.endDateTime",
+               "activity.durationInMinutes",
+               "activity.plannedDurationInMinutes",
+               "activity.plannedDurationType",
+               "activity.travelTimeToInMinutes",
+               "activity.travelTimeFromInMinutes",
+               "activity.region"
+            ]
+         },
+         {
+            "title": "assignments_group",
+            "fields": [
+               "activity.responsibles",
+               "activity.supportingPersons",
+               "activity.serviceCall.leader"
+            ]
+         },
+         {
+            "title": "location_group",
+            "fields": ["addressMap"]
+         },
+         {
+            "title": "address_group",
+            "fields": [
+               "addressOrigin",
+               "activity.address"
+            ]
+         },
+         {
+            "title": "skills_group",
+            "fields": []
+         },
+         {
+            "title": "reminders_group",
+            "fields": []
+         }
+      ],
+      "header": [{
+         "tiles": [
+            "activity.icon",
+            "activity.contact",
+            "activity.status",
+            "activity.serviceAssignmentStatuses",
+            "activity.hazardType",
+            "activity.assignments"
+         ],
+         "id": "main"
+      }
+    {
+            "title": "reminders_group",
+            "fields": []
+         },
+         {
+            "title": "run_links_group",
+            "fields": [
+               "activity.udf.ZX_RUN_ID",
+               "activity.udf.ZX_CATALOG_URL",
+               "activity.udf.ZX_ARGUS_URL",
+               "activity.udf.ZX_PAPER_URL",
+               "activity.udf.ZX_IDM_URL"
+            ]
+         },
+         {
+            "title": "jira_group",
+            "fields": [
+               "activity.udf.ZPT_TICKET_ID",
+               "activity.udf.ZPT_TICKET_TITLE",
+               "activity.udf.ZPT_TICKET_STATUS"
+            ]
+         }],
+   },
+   "metadata": {
+      "supportedTileTypes": [
+         "Icon",
+         "SingleValue",
+         "MultiValue",
+         "SingleValueAndIcon",
+         "Chip"
+      ],
+      "allowUdfsForAdditionalObjects": [
+         "EQUIPMENT",
+         "SERVICECALL"
+      ],
+      "objectTypeToReferencedObjectAllowUdfMapping": [
+         {
+            "udfForReferencedObject": "activity.equipment",
+            "objectType": "EQUIPMENT"
+         },
+         {
+            "udfForReferencedObject": "serviceCall",
+            "objectType": "SERVICECALL"
+         }
+      ],
+      "platforms": ["WEBAPP"]
+   },
+   "tilesConfiguration": {"tiles": [
+      {
+         "tileElements": [{
+            "iconName": "building",
+            "description": "",
+            "type": "Icon",
+            "elementName": "Icon"
+         }],
+         "name": "activity.icon",
+         "description": "",
+         "type": "Icon"
+      },
+      {
+         "tileElements": [
+            {
+               "valueReference": "Value 1",
+               "description": "Customer",
+               "type": "Label",
+               "elementName": "Label 1"
+            },
+            {
+               "fieldName": "activity.businessPartner",
+               "linkExpression": "\"/shell/#/master-data-management/businesspartner/details/\" + ${activity.businessPartner} ",
+               "description": "",
+               "type": "Link",
+               "elementName": "Value 1"
+            },
+            {
+               "valueReference": "Value 2",
+               "description": "Code",
+               "type": "Label",
+               "elementName": "Label 2"
+            },
+            {
+               "description": "",
+               "displayExpression": "${activity.businessPartner.code} ",
+               "type": "Value",
+               "elementName": "Value 2"
+            },
+            {
+               "valueReference": "Value 3",
+               "description": "Contact Person",
+               "type": "Label",
+               "elementName": "Label 3"
+            },
+            {
+               "fieldName": "activity.contact",
+               "linkExpression": "\"/shell/#/master-data-management/contact/details/\" + ${activity.contact} ",
+               "description": "",
+               "type": "Link",
+               "elementName": "Value 3"
+            }
+         ],
+         "name": "activity.contact",
+         "description": "",
+         "type": "MultiValue"
+      },
+      {
+         "tileElements": [
+            {
+               "visibleExpression": "",
+               "translationKey": "SC_ACTIVITY_TAB_CONFIG_SERVICE_CALL_CONTACT_L",
+               "valueReference": "Value",
+               "description": "SC_ACTIVITY_TAB_CONFIG_SERVICE_CALL_CONTACT_L",
+               "type": "Label",
+               "elementName": "Label"
+            },
+            {
+               "fieldName": "serviceCall.contact",
+               "description": "",
+               "fontSize": "true",
+               "type": "Value",
+               "elementName": "Value"
+            }
+         ],
+         "name": "serviceCall.contact",
+         "description": "",
+         "type": "SingleValue"
+      },
+      {
+         "tileElements": [
+            {
+               "visibleExpression": "",
+               "translationKey": "SC_ACTIVITY_TAB_CONFIG_ACTIVITY_RESOLVED_STATUS_L",
+               "valueReference": "Value",
+               "description": "Type",
+               "type": "Label",
+               "elementName": "Label"
+            },
+            {
+               "fieldName": "activity.status",
+               "description": "",
+               "fontSize": "true",
+               "type": "Value",
+               "elementName": "Value"
+            }
+         ],
+         "name": "activity.status",
+         "description": "",
+         "type": "SingleValue"
+      },
+      {
+         "tileElements": [
+            {
+               "translationKey": "SC_ACTIVITY_TAB_CONFIG_SERVICE_ASSIGNMENT_STATUS_L",
+               "valueReference": "Value",
+               "description": "Priority",
+               "type": "Label",
+               "elementName": "Label"
+            },
+            {
+               "fieldName": "activity.serviceAssignmentStatuses",
+               "description": "",
+               "fontSize": "true",
+               "type": "Value",
+               "elementName": "Value"
+            }
+         ],
+         "name": "activity.serviceAssignmentStatuses",
+         "description": "",
+         "type": "SingleValue"
+      },
+      {
+         "tileElements": [
+            {
+               "translationKey": "SC_ACTIVITY_TAB_CONFIG_ACTIVITY_HAZARD_TYPE_L",
+               "valueReference": "Value",
+               "description": "Status",
+               "type": "Label",
+               "elementName": "Label"
+            },
+            {
+               "fieldName": "activity.hazardType",
+               "description": "",
+               "fontSize": "true",
+               "type": "Value",
+               "elementName": "Value"
+            }
+         ],
+         "name": "activity.hazardType",
+         "description": "",
+         "type": "SingleValue"
+      },
+      {
+         "tileElements": [
+            {
+               "translationKey": "SC_ACTIVITY_TAB_CONFIG_ACTIVITY_RESPONSIBLE_L",
+               "valueReference": "Value 1",
+               "description": "Responsible",
+               "type": "Label",
+               "elementName": "Label 1"
+            },
+            {
+               "fieldName": "activity.responsibles",
+               "description": "",
+               "type": "Value",
+               "elementName": "Value 1"
+            },
+            {
+               "translationKey": "SC_ACTIVITY_TAB_CONFIG_ACTIVITY_CREW_L",
+               "valueReference": "Value 2",
+               "description": "Crew",
+               "type": "Label",
+               "elementName": "Label 2"
+            },
+            {
+               "fieldName": "activity.crew",
+               "description": "",
+               "type": "Value",
+               "elementName": "Value 2"
+            },
+            {
+               "translationKey": "SC_ACTIVITY_TAB_CONFIG_ACTIVITY_SUPPORTING_TECHNICIANS_L",
+               "valueReference": "Value 3",
+               "description": "Supporting Technicians",
+               "type": "Label",
+               "elementName": "Label 3"
+            },
+            {
+               "fieldName": "activity.supportingPersons",
+               "description": "",
+               "type": "Value",
+               "elementName": "Value 3"
+            }
+         ],
+         "name": "activity.assignments",
+         "description": "",
+         "type": "MultiValue"
+      }
+   ]},
+   "fieldsConfiguration": {"fields": [
+      {
+         "displayProperties": [{
+            "property": "activity.subject",
+            "title": "SC_ACTIVITY_TAB_CONFIG_ACTIVITY_SUBJECT_L",
+            "type": "string"
+         }],
+         "visible": true,
+         "editable": true,
+         "name": "activity.subject",
+         "property": "subject",
+         "description": "Subject",
+         "required": true,
+         "entity": "ACTIVITY"
+      },
+      {
+         "displayProperties": [{
+            "property": "activity.id",
+            "title": "SC_ACTIVITY_TAB_CONFIG_ACTIVITY_ID_L",
+            "type": "string"
+         }],
+         "visible": false,
+         "editable": false,
+         "name": "activity.id",
+         "property": "id",
+         "description": "Id",
+         "required": false,
+         "entity": "ACTIVITY"
+      },
+      {
+         "displayProperties": [{
+            "property": "activity.code",
+            "title": "SC_ACTIVITY_TAB_CONFIG_ACTIVITY_CODE_L",
+            "type": "string"
+         }],
+         "visible": false,
+         "editable": false,
+         "name": "activity.code",
+         "property": "code",
+         "description": "Code",
+         "required": false,
+         "entity": "ACTIVITY"
+      },
+      {
+         "displayProperties": [{
+            "property": "activity.sourceActivity",
+            "title": "SC_ACTIVITY_TAB_CONFIG_SOURCE_ACTIVITY_L",
+            "type": "string"
+         }],
+         "visible": false,
+         "editable": false,
+         "name": "activity.sourceActivity",
+         "property": "sourceActivity",
+         "description": "Source Activity",
+         "required": false,
+         "entity": "ACTIVITY"
+      },
+      {
+         "displayProperties": [{
+            "property": "activity.hazardType",
+            "title": "SC_ACTIVITY_TAB_CONFIG_ACTIVITY_HAZARD_TYPE_L",
+            "type": "autocomplete"
+         }],
+         "visible": false,
+         "editable": true,
+         "name": "activity.hazardType",
+         "property": "hazardType",
+         "description": "Signal Word",
+         "required": false,
+         "entity": "ACTIVITY"
+      },
+      {
+         "displayProperties": [{
+            "property": "serviceCall.id",
+            "title": "SC_ACTIVITY_TAB_CONFIG_SERVICE_CALL_ID_L",
+            "type": "string"
+         }],
+         "visible": false,
+         "editable": false,
+         "name": "serviceCall.id",
+         "property": "id",
+         "description": "Service Call Id",
+         "required": false,
+         "entity": "SERVICECALL"
+      },
+      {
+         "displayProperties": [{
+            "property": "activity.status",
+            "title": "SC_ACTIVITY_TAB_CONFIG_ACTIVITY_STATUS_L",
+            "type": "autocomplete"
+         }],
+         "visible": false,
+         "editable": false,
+         "name": "activity.status",
+         "property": "status",
+         "description": "Status",
+         "required": false,
+         "entity": "ACTIVITY"
+      },
+      {
+         "displayProperties": [{
+            "property": "activity.executionStage",
+            "title": "SC_ACTIVITY_TAB_CONFIG_ACTIVITY_EXECUTION_STAGE_L",
+            "type": "autocomplete"
+         }],
+         "visible": false,
+         "editable": false,
+         "name": "activity.executionStage",
+         "property": "executionStage",
+         "description": "Execution Stage",
+         "required": false,
+         "entity": "ACTIVITY"
+      },
+      {
+         "displayProperties": [{
+            "property": "serviceAssignment.state",
+            "title": "SC_ACTIVITY_TAB_CONFIG_SERVICE_ASSIGNMENT_STATE_L",
+            "type": "autocomplete"
+         }],
+         "visible": false,
+         "editable": false,
+         "name": "serviceAssignment.state",
+         "property": "state",
+         "description": "State",
+         "required": false,
+         "entity": "SERVICEASSIGNMENT"
+      },
+      {
+         "displayProperties": [{
+            "property": "activity.businessPartner",
+            "title": "SC_ACTIVITY_TAB_CONFIG_ACTIVITY_BUSINESS_PARTNER_L",
+            "type": "autocomplete"
+         }],
+         "visible": false,
+         "editable": false,
+         "name": "activity.businessPartner",
+         "property": "businessPartner",
+         "description": "Customer",
+         "required": false,
+         "entity": "ACTIVITY"
+      },
+      {
+         "displayProperties": [{
+            "property": "activity.serviceProduct",
+            "title": "SC_ACTIVITY_TAB_CONFIG_ACTIVITY_SERVICE_PRODUCT_L",
+            "type": "autocomplete"
+         }],
+         "visible": false,
+         "editable": true,
+         "name": "activity.serviceProduct",
+         "property": "serviceProduct",
+         "description": "Service Product",
+         "required": false,
+         "entity": "ACTIVITY"
+      },
+      {
+         "displayProperties": [{
+            "property": "activity.subType",
+            "title": "SC_ACTIVITY_TAB_CONFIG_ACTIVITY_SUB_TYPE_L",
+            "type": "autocomplete"
+         }],
+         "visible": false,
+         "editable": false,
+         "name": "activity.subType",
+         "property": "subType",
+         "description": "Sub Type",
+         "required": false,
+         "entity": "ACTIVITY"
+      },
+      {
+         "displayProperties": [{
+            "property": "activity.topic",
+            "title": "SC_ACTIVITY_TAB_CONFIG_ACTIVITY_TOPIC_L",
+            "type": "autocomplete"
+         }],
+         "visible": false,
+         "editable": false,
+         "name": "activity.topic",
+         "property": "topic",
+         "description": "Topic",
+         "required": false,
+         "entity": "ACTIVITY"
+      },
+      {
+         "displayProperties": [{
+            "property": "activity.equipment",
+            "title": "SC_ACTIVITY_TAB_CONFIG_ACTIVITY_EQUIPMENT_L",
+            "type": "autocomplete"
+         }],
+         "visible": true,
+         "editable": true,
+         "name": "activity.equipment",
+         "property": "equipment",
+         "description": "Equipment Name",
+         "required": false,
+         "entity": "ACTIVITY"
+      },
+      {
+         "displayProperties": [{
+            "property": "activity.equipment.serialNumber",
+            "title": "SC_ACTIVITY_TAB_CONFIG_ACTIVITY_EQUIPMENT_SERIAL_NUMBER_L",
+            "type": "string"
+         }],
+         "visible": true,
+         "editable": false,
+         "name": "activity.equipment.serialNumber",
+         "property": "serialNumber",
+         "description": "Equipment Serial No.",
+         "required": false,
+         "entity": "EQUIPMENT"
+      },
+      {
+         "displayProperties": [{
+            "property": "activity.equipment.manufacturerSerialNumber",
+            "title": "SC_ACTIVITY_TAB_CONFIG_ACTIVITY_EQUIPMENT_MANUFACTURER_SERIAL_NUMBER_L",
+            "type": "string"
+         }],
+         "visible": true,
+         "editable": false,
+         "name": "activity.equipment.manufacturerSerialNumber",
+         "property": "manufacturerSerialNumber",
+         "description": "Equipment Manufacturer Serial No.",
+         "required": false,
+         "entity": "EQUIPMENT"
+      },
+      {
+         "displayProperties": [{
+            "property": "activity.equipment.remarks",
+            "title": "SC_ACTIVITY_TAB_CONFIG_ACTIVITY_EQUIPMENT_REMARKS_L",
+            "type": "textarea"
+         }],
+         "visible": false,
+         "editable": false,
+         "name": "activity.equipment.remarks",
+         "property": "remarks",
+         "description": "Equipment Remarks",
+         "required": false,
+         "entity": "EQUIPMENT"
+      },
+      {
+         "displayProperties": [{
+            "property": "activity.remarks",
+            "title": "SC_ACTIVITY_TAB_CONFIG_ACTIVITY_REMARKS_L",
+            "type": "textarea"
+         }],
+         "visible": true,
+         "editable": true,
+         "name": "activity.remarks",
+         "property": "remarks",
+         "description": "Remarks (for Technician)",
+         "required": false,
+         "entity": "ACTIVITY"
+      },
+      {
+         "name": "udfMeta.Z_Calendar_Event",
+         "property": "Z_Calendar_Event",
+         "description": "Calendar Event Id",
+         "entity": "ACTIVITY"
+      },
+      {
+         "displayProperties": [{
+            "property": "activity.earliestStartDateTime",
+            "title": "SC_ACTIVITY_TAB_CONFIG_ACTIVITY_EARLIEST_START_DATE_TIME_L",
+            "type": "datetime"
+         }],
+         "visible": false,
+         "editable": true,
+         "name": "activity.earliestStartDateTime",
+         "property": "earliestStartDateTime",
+         "description": "Earliest Start Date",
+         "entity": "ACTIVITY"
+      },
+      {
+         "displayProperties": [{
+            "property": "activity.dueDateTime",
+            "title": "SC_ACTIVITY_TAB_CONFIG_ACTIVITY_DUE_DATE_TIME_L",
+            "type": "datetime"
+         }],
+         "visible": true,
+         "editable": true,
+         "name": "activity.dueDateTime",
+         "property": "dueDateTime",
+         "description": "Due Date",
+         "entity": "ACTIVITY"
+      },
+      {
+         "displayProperties": [{
+            "property": "activity.startDateTime",
+            "title": "SC_ACTIVITY_TAB_CONFIG_ACTIVITY_START_DATE_TIME_L",
+            "type": "datetime"
+         }],
+         "visible": true,
+         "editable": true,
+         "name": "activity.startDateTime",
+         "property": "startDateTime",
+         "description": "Planned Start Date",
+         "entity": "ACTIVITY"
+      },
+      {
+         "displayProperties": [{
+            "property": "activity.endDateTime",
+            "title": "SC_ACTIVITY_TAB_CONFIG_ACTIVITY_END_DATE_TIME_L",
+            "type": "datetime"
+         }],
+         "visible": true,
+         "editable": true,
+         "name": "activity.endDateTime",
+         "property": "endDateTime",
+         "description": "Planned End Date",
+         "entity": "ACTIVITY"
+      },
+      {
+         "displayProperties": [{
+            "property": "activity.durationInMinutes",
+            "title": "SC_ACTIVITY_TAB_CONFIG_ACTIVITY_DURATION_IN_MINUTES_L",
+            "type": "number"
+         }],
+         "visible": true,
+         "editable": true,
+         "name": "activity.durationInMinutes",
+         "property": "durationInMinutes",
+         "description": "Estimated Duration",
+         "required": false,
+         "entity": "ACTIVITY"
+      },
+      {
+         "displayProperties": [{
+            "property": "activity.plannedDurationInMinutes",
+            "title": "SC_ACTIVITY_TAB_CONFIG_ACTIVITY_PLANNED_DURATION_IN_MINUTES_L",
+            "type": "number"
+         }],
+         "visible": true,
+         "editable": true,
+         "name": "activity.plannedDurationInMinutes",
+         "property": "plannedDurationInMinutes",
+         "description": "Planned Duration",
+         "required": false,
+         "entity": "ACTIVITY"
+      },
+      {
+         "displayProperties": [{
+            "property": "activity.plannedDurationType",
+            "title": "SC_ACTIVITY_TAB_CONFIG_ACTIVITY_PLANNED_DURATION_TYPE_L",
+            "type": "autocomplete"
+         }],
+         "visible": false,
+         "editable": false,
+         "name": "activity.plannedDurationType",
+         "property": "plannedDurationType",
+         "description": "Planned Duration Type",
+         "required": false,
+         "entity": "ACTIVITY"
+      },
+      {
+         "displayProperties": [{
+            "property": "activity.travelTimeToInMinutes",
+            "title": "SC_ACTIVITY_TAB_CONFIG_ACTIVITY_TRAVEL_TIME_TO_IN_MINUTES_L",
+            "type": "number"
+         }],
+         "visible": false,
+         "editable": true,
+         "name": "activity.travelTimeToInMinutes",
+         "property": "travelTimeToInMinutes",
+         "description": "Travel Time To",
+         "required": false,
+         "entity": "ACTIVITY"
+      },
+      {
+         "displayProperties": [{
+            "property": "activity.travelTimeFromInMinutes",
+            "title": "SC_ACTIVITY_TAB_CONFIG_ACTIVITY_TRAVEL_TIME_FROM_IN_MINUTES_L",
+            "type": "number"
+         }],
+         "visible": false,
+         "editable": true,
+         "name": "activity.travelTimeFromInMinutes",
+         "property": "travelTimeFromInMinutes",
+         "description": "Travel Time From",
+         "required": false,
+         "entity": "ACTIVITY"
+      },
+      {
+         "displayProperties": [{
+            "property": "activity.region",
+            "title": "SC_ACTIVITY_TAB_CONFIG_ACTIVITY_REGION_L",
+            "type": "autocomplete"
+         }],
+         "visible": true,
+         "editable": true,
+         "name": "activity.region",
+         "property": "region",
+         "description": "Region",
+         "entity": "ACTIVITY"
+      },
+      {
+         "displayProperties": [{
+            "property": "activity.responsibles",
+            "title": "SC_ACTIVITY_TAB_CONFIG_ACTIVITY_RESPONSIBLE_L",
+            "type": "autocomplete"
+         }],
+         "visible": true,
+         "editable": false,
+         "name": "activity.responsibles",
+         "property": "responsibles",
+         "description": "Responsible",
+         "required": false,
+         "entity": "ACTIVITY"
+      },
+      {
+         "displayProperties": [{
+            "property": "activity.supportingPersons",
+            "title": "SC_ACTIVITY_TAB_CONFIG_ACTIVITY_SUPPORTING_TECHNICIANS_L",
+            "type": "autocomplete"
+         }],
+         "visible": true,
+         "editable": false,
+         "name": "activity.supportingPersons",
+         "property": "supportingPersons",
+         "description": "Supporting Technicians",
+         "required": false,
+         "entity": "ACTIVITY"
+      },
+      {
+         "displayProperties": [{
+            "property": "activity.serviceCall.leader",
+            "title": "SC_ACTIVITY_TAB_CONFIG_ACTIVITY_SERVICE_CALL_LEADER_L",
+            "type": "autocomplete"
+         }],
+         "visible": false,
+         "editable": false,
+         "name": "activity.serviceCall.leader",
+         "property": "leader",
+         "description": "Leader On Site",
+         "required": false,
+         "entity": "SERVICECALL"
+      },
+      {
+         "displayProperties": [{
+            "property": "addressMap",
+            "title": "SC_ACTIVITY_TAB_CONFIG_ADDRESS_MAP_L",
+            "type": "string"
+         }],
+         "visible": true,
+         "editable": true,
+         "name": "addressMap",
+         "property": "addressMap",
+         "description": "Address Map",
+         "entity": "ACTIVITY"
+      },
+      {
+         "displayProperties": [{
+            "property": "addressOrigin",
+            "title": "SC_ACTIVITY_TAB_CONFIG_ADDRESS_ORIGIN_L",
+            "type": "autocomplete"
+         }],
+         "visible": true,
+         "editable": true,
+         "name": "addressOrigin",
+         "property": "addressOrigin",
+         "description": "Address Origin",
+         "entity": "ACTIVITY"
+      },
+      {
+         "displayProperties": [{
+            "property": "activity.address",
+            "title": "SC_ACTIVITY_TAB_CONFIG_ACTIVITY_ADDRESS_L",
+            "type": "autocomplete"
+         }],
+         "visible": true,
+         "editable": false,
+         "name": "activity.address",
+         "property": "address",
+         "description": "Address",
+         "entity": "ACTIVITY"
+      },
+      {
+         "displayProperties": [{
+            "property": "activity.crew",
+            "title": "SC_ACTIVITY_TAB_CONFIG_ACTIVITY_CREW_L",
+            "type": "autocomplete"
+         }],
+         "visible": true,
+         "editable": false,
+         "name": "activity.crew",
+         "property": "crew",
+         "description": "Crew",
+         "required": false,
+         "entity": "ACTIVITY"
+      },
+      {
+         "displayProperties": [{
+            "property": "activity.createDateTime",
+            "title": "SC_ACTIVITY_TAB_CONFIG_ACTIVITY_CREATE_DATE_TIME_L",
+            "type": "datetime"
+         }],
+         "visible": true,
+         "editable": false,
+         "name": "activity.createDateTime",
+         "property": "createDateTime",
+         "description": "Created",
+         "required": false,
+         "entity": "ACTIVITY"
+      },
+      {
+         "displayProperties": [{
+            "property": "activity.cancellationReason",
+            "title": "SC_ACTIVITY_TAB_CONFIG_ACTIVITY_CANCELLATION_REASON_L",
+            "type": "textarea"
+         }],
+         "visible": false,
+         "editable": false,
+         "name": "activity.cancellationReason",
+         "property": "cancellationReason",
+         "description": "Cancellation Reason",
+         "required": false,
+         "entity": "ACTIVITY"
+      },
+      {
+         "displayProperties": [{
+            "property": "activity.contact",
+            "title": "SC_ACTIVITY_TAB_CONFIG_ACTIVITY_CONTACT_NAME",
+            "type": "autocomplete"
+         }],
+         "visible": false,
+         "editable": false,
+         "name": "activity.contact",
+         "property": "contact",
+         "description": "Contact Person",
+         "required": false,
+         "entity": "ACTIVITY"
+      },
+      {
+         "displayProperties": [{
+            "property": "activity.businessProcessStepAssignments",
+            "title": "SC_ACTIVITY_TAB_CONFIG_ACTIVITY_BUSINESS_PROCESS_STEP_ASSIGNMENT_L",
+            "type": "string"
+         }],
+         "visible": false,
+         "editable": false,
+         "name": "activity.businessProcessStepAssignments",
+         "property": "businessProcessStepAssignments",
+         "description": "Business Process Step Assignment",
+         "required": false,
+         "entity": "ACTIVITY"
+      },
+      {
+         "displayProperties": [{
+            "property": "activity.businessPartner.code",
+            "title": "SC_ACTIVITY_TAB_CONFIG_ACTIVITY_BUSINESS_PARTNER_CODE_L",
+            "type": "string"
+         }],
+         "visible": true,
+         "editable": false,
+         "name": "activity.businessPartner.code",
+         "property": "businessPartner",
+         "description": "Business partner code",
+         "required": false,
+         "entity": "ACTIVITY"
+      },
+      {
+         "visible": false,
+         "editable": false,
+         "name": "serviceCall.lastChanged",
+         "property": "lastChanged",
+         "description": "Service call last changed",
+         "required": false,
+         "entity": "SERVICECALL"
+      },
+      {
+         "displayProperties": [{
+            "property": "serviceCall.code",
+            "title": "SC_ACTIVITY_TAB_CONFIG_ACTIVITY_SERVICE_CALL_CODE_L",
+            "type": "string"
+         }],
+         "visible": true,
+         "editable": false,
+         "name": "serviceCall.code",
+         "property": "code",
+         "description": "Service call code",
+         "required": true,
+         "entity": "SERVICECALL"
+      },
+      {
+         "displayProperties": [{
+            "property": "serviceCall.subject",
+            "title": "SC_ACTIVITY_TAB_CONFIG_ACTIVITY_SERVICE_CALL_SUBJECT_L",
+            "type": "string"
+         }],
+         "visible": true,
+         "editable": false,
+         "name": "serviceCall.subject",
+         "property": "subject",
+         "description": "Service call subject",
+         "required": true,
+         "entity": "SERVICECALL"
+      },
+      {
+         "displayProperties": [{
+            "property": "serviceCall.priority",
+            "title": "SC_ACTIVITY_TAB_CONFIG_ACTIVITY_SERVICE_CALL_PRIORITY_L",
+            "type": "string"
+         }],
+         "visible": true,
+         "editable": false,
+         "name": "serviceCall.priority",
+         "property": "priority",
+         "description": "Service call priority",
+         "required": false,
+         "entity": "SERVICECALL"
+      },
+      {
+         "displayProperties": [{
+            "property": "serviceCall.typeName",
+            "title": "SC_ACTIVITY_TAB_CONFIG_ACTIVITY_SERVICE_CALL_TYPE_NAME_L",
+            "type": "string"
+         }],
+         "visible": true,
+         "editable": false,
+         "name": "serviceCall.typeName",
+         "property": "typeName",
+         "description": "Service call type name",
+         "required": false,
+         "entity": "SERVICECALL"
+      },
+      {
+         "displayProperties": [{
+            "property": "serviceCall.typeCode",
+            "title": "SC_ACTIVITY_TAB_CONFIG_ACTIVITY_SERVICE_CALL_TYPE_CODE_L",
+            "type": "string"
+         }],
+         "visible": true,
+         "editable": false,
+         "name": "serviceCall.typeCode",
+         "property": "typeCode",
+         "description": "Service call type code",
+         "required": false,
+         "entity": "SERVICECALL"
+      },
+      {
+         "displayProperties": [{
+            "property": "serviceCall.statusName",
+            "title": "SC_ACTIVITY_TAB_CONFIG_ACTIVITY_SERVICE_CALL_STATUS_NAME_L",
+            "type": "string"
+         }],
+         "visible": false,
+         "editable": false,
+         "name": "serviceCall.statusName",
+         "property": "statusName",
+         "description": "Service call status name",
+         "required": true,
+         "entity": "SERVICECALL"
+      },
+      {
+         "visible": false,
+         "name": "serviceCall.statusCode",
+         "property": "statusCode",
+         "description": "Service call status code",
+         "entity": "SERVICECALL"
+      },
+      {
+         "displayProperties": [{
+            "property": "serviceCall.originName",
+            "title": "SC_ACTIVITY_TAB_CONFIG_ACTIVITY_SERVICE_CALL_ORIGIN_NAME_L",
+            "type": "string"
+         }],
+         "visible": false,
+         "editable": false,
+         "name": "serviceCall.originName",
+         "property": "originName",
+         "description": "Service call origin name",
+         "required": false,
+         "entity": "SERVICECALL"
+      },
+      {
+         "displayProperties": [{
+            "property": "serviceCall.remarks",
+            "title": "SC_ACTIVITY_TAB_CONFIG_ACTIVITY_SERVICE_CALL_REMARKS_L",
+            "type": "string"
+         }],
+         "visible": true,
+         "editable": false,
+         "name": "serviceCall.remarks",
+         "property": "remarks",
+         "description": "Service Call Remarks",
+         "required": false,
+         "entity": "SERVICECALL"
+      },
+      {
+         "displayProperties": [{
+            "property": "serviceCall.problemTypeName",
+            "title": "SC_ACTIVITY_TAB_CONFIG_ACTIVITY_SERVICE_PROBLEM_TYPE_L",
+            "type": "string"
+         }],
+         "visible": false,
+         "editable": false,
+         "name": "serviceCall.problemTypeName",
+         "property": "problemTypeName",
+         "description": "Service call problem type name",
+         "required": false,
+         "entity": "SERVICECALL"
+      },
+      {
+         "displayProperties": [{
+            "property": "serviceCall.startDateTime",
+            "title": "SC_ACTIVITY_TAB_CONFIG_ACTIVITY_SERVICE_CALL_START_L",
+            "type": "date"
+         }],
+         "visible": false,
+         "editable": false,
+         "name": "serviceCall.startDateTime",
+         "property": "startDateTime",
+         "description": "Service call start datetime",
+         "required": false,
+         "entity": "SERVICECALL"
+      },
+      {
+         "displayProperties": [{
+            "property": "serviceCall.endDateTime",
+            "title": "SC_ACTIVITY_TAB_CONFIG_ACTIVITY_SERVICE_CALL_END_L",
+            "type": "date"
+         }],
+         "visible": false,
+         "editable": false,
+         "name": "serviceCall.endDateTime",
+         "property": "endDateTime",
+         "description": "Service call end datetime",
+         "required": false,
+         "entity": "SERVICECALL"
+      },
+      {
+         "displayProperties": [{
+            "property": "serviceCall.dueDateTime",
+            "title": "SC_ACTIVITY_TAB_CONFIG_ACTIVITY_SERVICE_CALL_DUE_L",
+            "type": "string"
+         }],
+         "visible": false,
+         "editable": false,
+         "name": "serviceCall.dueDateTime",
+         "property": "dueDateTime",
+         "description": "Service call due datetime",
+         "required": false,
+         "entity": "SERVICECALL"
+      },
+      {
+         "displayProperties": [{
+            "property": "serviceCall.syncStatus",
+            "title": "SC_ACTIVITY_TAB_CONFIG_ACTIVITY_SERVICE_CALL_SYNC_STATUS_L",
+            "type": "string"
+         }],
+         "visible": false,
+         "editable": false,
+         "name": "serviceCall.syncStatus",
+         "property": "syncStatus",
+         "description": "Service call sync status",
+         "required": false,
+         "entity": "SERVICECALL"
+      },
+      {
+         "visible": false,
+         "editable": false,
+         "name": "activity.lastChanged",
+         "property": "lastChanged",
+         "description": "Activity last changed",
+         "required": false,
+         "entity": "ACTIVITY"
+      },
+      {
+         "visible": false,
+         "editable": false,
+         "name": "activity.syncStatus",
+         "property": "syncStatus",
+         "description": "Activity sync status",
+         "required": false,
+         "entity": "ACTIVITY"
+      },
+      {
+         "displayProperties": [{
+            "property": "activity.timeZoneId",
+            "title": "SC_ACTIVITY_TAB_CONFIG_ACTIVITY_TIME_ZONE_ID_L",
+            "type": "string"
+         }],
+         "visible": true,
+         "editable": false,
+         "name": "activity.timeZoneId",
+         "property": "timeZoneId",
+         "description": "Activity Timezone",
+         "required": false,
+         "entity": "ACTIVITY"
+      },
+      {
+         "displayProperties": [{
+            "property": "activity.region.name",
+            "title": "SC_ACTIVITY_TAB_CONFIG_ACTIVITY_REGION_NAME_L",
+            "type": "string"
+         }],
+         "visible": false,
+         "editable": false,
+         "name": "activity.region.name",
+         "property": "name",
+         "description": "Region Name",
+         "required": false,
+         "entity": "Region"
+      },
+      {
+         "displayProperties": [{
+            "property": "activity.internalRemarks",
+            "title": "SC_ACTIVITY_TAB_CONFIG_ACTIVITY_INTERNAL_REMARKS_L",
+            "type": "string"
+         }],
+         "visible": false,
+         "editable": false,
+         "name": "activity.internalRemarks",
+         "property": "internalRemarks",
+         "description": "Activity internal remarks",
+         "required": false,
+         "entity": "ACTIVITY"
+      },
+      {
+         "displayProperties": [{
+            "property": "activity.internalRemarks2",
+            "title": "SC_ACTIVITY_TAB_CONFIG_ACTIVITY_INTERNAL_REMARKS_2_L",
+            "type": "string"
+         }],
+         "visible": false,
+         "editable": false,
+         "name": "activity.internalRemarks2",
+         "property": "internalRemarks2",
+         "description": "Activity internal remarks 2",
+         "required": false,
+         "entity": "ACTIVITY"
+      },
+      {
+         "displayProperties": [{
+            "property": "activity.externalId",
+            "title": "SC_ACTIVITY_TAB_CONFIG_ACTIVITY_EXTERNAL_ID_L",
+            "type": "string"
+         }],
+         "visible": false,
+         "editable": false,
+         "name": "activity.externalId",
+         "property": "externalId",
+         "description": "Activity external id",
+         "required": false,
+         "entity": "ACTIVITY"
+      },
+      {
+         "displayProperties": [{
+            "property": "activity.serviceAssignment.plannedDurationInMinutes",
+            "title": "SC_ACTIVITY_TAB_CONFIG_ACTIVITY_PLANED_DURATION_L",
+            "type": "string"
+         }],
+         "visible": true,
+         "editable": true,
+         "name": "activity.serviceAssignment.plannedDurationInMinutes",
+         "property": "plannedDurationInMinutes",
+         "description": "Planned Duration",
+         "required": false,
+         "entity": "ACTIVITY"
+      },
+      {
+         "displayProperties": [{
+            "property": "activity.serviceAssignmentStatus.name",
+            "title": "SC_ACTIVITY_TAB_CONFIG_ACTIVITY_STEP_L",
+            "type": "string"
+         }],
+         "visible": true,
+         "editable": false,
+         "name": "activity.serviceAssignmentStatus.name",
+         "property": "name",
+         "description": "Service assignment status name",
+         "required": false,
+         "entity": "ServiceAssignmentStatus"
+      },
+      {
+         "visible": false,
+         "editable": false,
+         "name": "activity.project.id",
+         "property": "id",
+         "description": "Project Id",
+         "required": false,
+         "entity": "ACTIVITY"
+      }
+   ]},
+   "actionsConfiguration": {"actions": []}
+}

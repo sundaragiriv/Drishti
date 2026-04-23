@@ -1,0 +1,2 @@
+"""Institutional + insider intelligence subsystem."""
+

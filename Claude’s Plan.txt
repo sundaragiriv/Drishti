@@ -1,0 +1,155 @@
+Claude’s Plan
+Signal Command Center — Implementation Plan
+Context
+Build a production-grade multi-symbol quantitative signal scanner as a new module (signal_scanner/) in e:\Quant-Bridge. The scanner monitors S&P 500, Nasdaq 100, and other watchlists, calculating GEX (institutional positioning), technical confluence, and ranking trade opportunities by a 0-100 strength score. It presents results in a real-time Plotly Dash dashboard.
+
+The existing Quant-Bridge project has only two basic yfinance-to-Excel scripts (market_engine.py, market_brain.py). This is a greenfield build.
+
+Technology Stack
+Component	Choice	Rationale
+Data (primary)	ib_insync	Real-time IBKR data with full Greeks
+Data (fallback)	yfinance	Development/testing without TWS running
+Technical Analysis	pandas-ta	Pure Python, easy Windows install
+Dashboard	Plotly Dash + dash-bootstrap-components	Professional dark-theme web UI
+Database	SQLite (raw sqlite3)	Lightweight, no server needed
+Scheduling	APScheduler	Background recurring scans
+Logging	loguru	Better formatting than stdlib
+Notifications	win10toast	Windows desktop alerts
+GEX math	scipy.stats.norm	Black-Scholes gamma for yfinance fallback
+File Manifest (26 files)
+
+e:\Quant-Bridge\
+├── requirements.txt
+├── README.md
+└── signal_scanner/
+    ├── __init__.py
+    ├── config.py                          # All tunable parameters (dataclasses)
+    ├── main.py                            # Entry point: argparse, scheduler, Dash
+    ├── core/
+    │   ├── __init__.py
+    │   ├── ibkr_connector.py              # Dual data source (IBKR + yfinance), rate limiting
+    │   ├── gex_calculator.py              # GEX math, zero gamma, gamma walls
+    │   ├── technical_analyzer.py          # SMA-200, RSI-14, ADX-14, volume ratio
+    │   ├── confluence_engine.py           # 5-factor scoring (0-100)
+    │   └── watchlist_manager.py           # Load .txt symbol lists, sector mapping
+    ├── scanner/
+    │   ├── __init__.py
+    │   ├── multi_symbol_scanner.py        # Orchestrates per-symbol scan loop
+    │   └── signal_ranker.py               # Sort, filter, aggregate signals
+    ├── database/
+    │   ├── __init__.py
+    │   ├── models.py                      # SQL schema strings
+    │   └── db_manager.py                  # CRUD with WAL mode for concurrency
+    ├── dashboard/
+    │   ├── __init__.py
+    │   ├── app.py                         # Dash app initialization
+    │   ├── layouts/
+    │   │   ├── __init__.py
+    │   │   ├── main_view.py               # Signal table, filters, stats cards
+    │   │   └── detail_view.py             # Candlestick + GEX overlay charts
+    │   └── callbacks.py                   # All Dash interactivity
+    ├── utils/
+    │   ├── __init__.py
+    │   ├── logger.py                      # loguru setup (stderr + rotating file)
+    │   └── notifications.py               # win10toast desktop alerts
+    └── watchlists/
+        ├── test.txt                       # 5 symbols for dev (SPY, AAPL, MSFT, NVDA, TSLA)
+        ├── sp500.txt                      # S&P 500 constituents
+        ├── nasdaq100.txt                  # Nasdaq 100 constituents
+        └── custom.txt                     # User-editable list
+Build Order (6 Phases)
+Phase 0: Scaffolding
+Files: requirements.txt, all __init__.py, config.py, utils/logger.py
+
+Dataclass-based config (IBKRConfig, ScannerConfig, GEXConfig, DashboardConfig)
+CONFLUENCE_WEIGHTS dict with the 5 scoring factors
+loguru: stderr at INFO + rotating file at DEBUG
+Phase 1: Data Layer
+Files: database/models.py, database/db_manager.py, core/watchlist_manager.py, watchlist .txt files
+
+SQLite with PRAGMA journal_mode=WAL for concurrent read/write
+signals table with UNIQUE(symbol, timeframe, timestamp) for upsert
+scan_history table for audit trail
+Watchlist manager loads .txt files, provides sector mapping
+Phase 2: Core Analysis Engines
+Files: core/ibkr_connector.py, core/gex_calculator.py, core/technical_analyzer.py, core/confluence_engine.py
+
+ibkr_connector.py (highest complexity):
+
+DataConnector class with IBKR primary + yfinance fallback
+Auto-reconnect on disconnect (retries with backoff)
+Token-bucket rate limiter (45 req/sec for IBKR, conservative for yfinance)
+Black-Scholes gamma approximation when IBKR unavailable
+Unified interface: get_price_data(), get_option_chain()
+gex_calculator.py:
+
+GEX = Gamma * OI * Strike^2 * 100 per strike
+Call GEX positive, Put GEX negative (dealer positioning convention)
+Zero Gamma = linear interpolation where net GEX crosses zero
+Gamma walls = strikes with highest/lowest absolute GEX above/below price
+technical_analyzer.py:
+
+pandas-ta Strategy for batch: SMA_200, RSI_14, ADX_14
+Manual volume ratio (Volume / 20-period SMA)
+Returns TechnicalResult dataclass
+confluence_engine.py:
+
+Scores LONG and SHORT independently, picks higher direction
+Volume (15pts) and ADX (20pts) are direction-agnostic (add to both)
+Minimum 40pts to emit LONG/SHORT (else NEUTRAL)
+Phase 3: Scanner Pipeline
+Files: scanner/multi_symbol_scanner.py, scanner/signal_ranker.py
+
+Sequential scanning (respects rate limits)
+GEX calculated once per symbol (not per timeframe)
+Stores each result via db_manager.upsert_signal()
+Desktop notification for score >= 85
+signal_ranker.py: sort by score, filter by signal/sector/score, aggregate across timeframes
+Phase 4: Notifications
+File: utils/notifications.py
+
+win10toast with threaded=True (non-blocking)
+Graceful fallback if not installed
+Phase 5: Dashboard + Entry Point
+Files: dashboard/app.py, dashboard/layouts/*, dashboard/callbacks.py, main.py
+
+Main view: DataTable with sorting/filtering, stats cards, auto-refresh (30s interval)
+Detail view: Candlestick chart with SMA-200/GEX overlays, volume subplot, confluence breakdown bar chart, signal history
+Styling: Dark theme (#0e1117 bg, #1a1d23 cards, cyan/magenta accents)
+
+main.py:
+
+argparse: --watchlist, --no-ibkr, --no-dashboard, --scan-once
+APScheduler with max_instances=1, coalesce=True
+Initial scan runs immediately, then scheduled every 120s
+Key Design Decisions
+GEX once per symbol, not per timeframe — Options data is a point-in-time snapshot, not timeframe-specific. Reduces API calls by ~3x.
+Sequential scanning — Both IBKR and yfinance enforce rate limits. Parallel would hit limits faster.
+WAL mode for SQLite — Scanner thread writes while Dash reads concurrently without locking.
+40-point minimum for directional signal — Prevents noisy signals from single-factor alignment.
+--scan-once flag — Essential for testing the full pipeline without scheduler.
+Verification Plan
+Phase 0-1: Run python -c "from signal_scanner.database.db_manager import DatabaseManager; ..." to verify DB init and watchlist loading
+Phase 2: Run python -c "from signal_scanner.core.ibkr_connector import DataConnector; ..." to verify yfinance data fetch and option chain
+Phase 3: Run python -m signal_scanner.main --watchlist test --no-ibkr --scan-once — single scan, check SQLite for results
+Phase 5: Run python -m signal_scanner.main --watchlist test --no-ibkr — open http://127.0.0.1:8050, verify table, filters, detail view, auto-refresh
+User approved the plan
+Plan approved. Let me start building. I'll create the todo list and begin with Phase 0.
+
+Update Todos
+
+Phase 0: Create directory structure, requirements.txt, config.py, logger.py, all __init__.py files
+
+Phase 1: Build database models, db_manager, watchlist_manager, and watchlist .txt files
+
+Phase 2: Build ibkr_connector, gex_calculator, technical_analyzer, confluence_engine
+
+Phase 3: Build multi_symbol_scanner and signal_ranker
+
+Phase 4: Build notifications.py
+
+Phase 5: Build dashboard (app.py, main_view, detail_view, callbacks) and main.py entry point
+
+Create README.md with setup and usage instructions
+
+Verify: test scan with --scan-once --no-ibkr

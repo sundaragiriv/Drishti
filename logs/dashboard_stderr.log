@@ -1,0 +1,13 @@
+2026-04-22 01:08:13.368 | INFO     | signal_scanner.database.db_manager:init_db:77 - Database initialized at E:\Quant-Bridge\signal_scanner\data\signals.db
+2026-04-22 01:08:20.540 | INFO     | signal_scanner.institutional_intel.intelligence.regime_hmm:load:398 - HMM model loaded from data\warehouse\models\regime_hmm_daily.pkl (fitted 2026-04-22 on SPY)
+2026-04-22 01:08:20.542 | INFO     | signal_scanner.paper.idea_bridge:_load_hmm:72 - IdeaBridge: HMM regime model loaded (fitted 2026-04-22)
+2026-04-22 01:08:20.611 | DEBUG    | signal_scanner.scanner.multi_symbol_scanner:_load_cached_results:230 - Scan cache stale (1131.9h) — ignoring
+2026-04-22 01:08:20.925 | INFO     | signal_scanner.scanner.multi_symbol_scanner:_load_intelligence_snapshot:330 - Intelligence snapshot loaded: 3112 tickers from 2025-Q4
+2026-04-22 01:08:30.867 | INFO     | __main__:main:64 - Dashboard at http://127.0.0.1:8050
+2026-04-22 01:08:30.868 | INFO     | __main__:main:65 - IBKR not connected — scanner features disabled, intelligence/sniper/performance active
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:8050
+ * Running on http://172.20.3.198:8050
+Press CTRL+C to quit
+127.0.0.1 - - [22/Apr/2026 01:08:45] "GET / HTTP/1.1" 200 -

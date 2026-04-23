@@ -1,0 +1,6 @@
+# Test watchlist — small set for development
+SPY
+AAPL
+MSFT
+NVDA
+TSLA

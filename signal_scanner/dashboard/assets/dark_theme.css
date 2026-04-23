@@ -1,0 +1,842 @@
+/* ============================================================
+   KUBERA DESIGN SYSTEM
+   Turmeric Gold + Dark theme
+   ============================================================ */
+
+/* ---- 1. CSS CUSTOM PROPERTIES ---- */
+:root {
+    --kb-bg: #0c0e14;
+    --kb-card: #14171e;
+    --kb-card-elevated: #1a1e28;
+    --kb-text: #f0f0f5;
+    --kb-text-muted: #8a92a6;
+    --kb-border: #2a2e3a;
+    --kb-gold: #D4A017;
+    --kb-gold-light: #E8B930;
+    --kb-gold-dim: rgba(212, 160, 23, 0.15);
+    --kb-gold-glow: rgba(212, 160, 23, 0.25);
+    --kb-long: #00d26a;
+    --kb-short: #ff006e;
+    --kb-neutral: #ffc107;
+    --kb-radius: 10px;
+    --kb-radius-sm: 6px;
+    --kb-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+    --kb-shadow-hover: 0 8px 32px rgba(0, 0, 0, 0.5);
+    --kb-transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    --kb-font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --kb-font-mono: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+}
+
+/* ---- 2. BASE TYPOGRAPHY ---- */
+body {
+    font-family: var(--kb-font-body) !important;
+    background-color: var(--kb-bg) !important;
+    color: var(--kb-text) !important;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: var(--kb-font-body) !important;
+    font-weight: 700 !important;
+    letter-spacing: -0.02em !important;
+}
+
+h1 { font-size: 2rem !important; }
+h2 { font-size: 1.5rem !important; }
+h3 { font-size: 1.25rem !important; }
+h4 { font-size: 1.1rem !important; }
+h5 { font-size: 0.95rem !important; }
+
+.kb-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--kb-text-muted);
+}
+
+/* ---- 3. ANIMATIONS ---- */
+@keyframes kb-fadeIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes kb-fadeInFast {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+@keyframes kb-slideDown {
+    from { opacity: 0; transform: translateY(-8px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes kb-pulse {
+    0%, 100% { opacity: 1; }
+    50%      { opacity: 0.6; }
+}
+
+@keyframes kb-shimmer {
+    0%   { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+}
+
+.kb-animate-in {
+    animation: kb-fadeIn 0.4s ease-out both;
+}
+
+.kb-animate-fade {
+    animation: kb-fadeInFast 0.3s ease-out both;
+}
+
+.kb-animate-slide {
+    animation: kb-slideDown 0.3s ease-out both;
+}
+
+.kb-scanning-pulse {
+    animation: kb-pulse 1.5s ease-in-out infinite;
+}
+
+/* Staggered animation delays for stat cards */
+.kb-stagger-1 { animation-delay: 0.05s; }
+.kb-stagger-2 { animation-delay: 0.1s; }
+.kb-stagger-3 { animation-delay: 0.15s; }
+.kb-stagger-4 { animation-delay: 0.2s; }
+.kb-stagger-5 { animation-delay: 0.25s; }
+.kb-stagger-6 { animation-delay: 0.3s; }
+
+/* ---- 4. NAVBAR ---- */
+.kb-navbar {
+    background-color: var(--kb-card) !important;
+    border-bottom: 1px solid var(--kb-border) !important;
+    padding: 0 24px !important;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+.kb-navbar .navbar-brand {
+    font-size: 1.3rem !important;
+    font-weight: 800 !important;
+    color: var(--kb-gold) !important;
+    letter-spacing: -0.02em;
+    padding: 12px 0;
+    transition: var(--kb-transition);
+}
+
+.kb-navbar .navbar-brand:hover {
+    color: var(--kb-gold-light) !important;
+    text-decoration: none;
+}
+
+.kb-navbar .kb-brand-icon {
+    font-size: 1.1rem;
+    margin-right: 8px;
+}
+
+.kb-navbar .nav-link {
+    color: var(--kb-text-muted) !important;
+    font-size: 0.85rem !important;
+    font-weight: 500 !important;
+    padding: 16px 18px !important;
+    border-bottom: 2px solid transparent;
+    transition: var(--kb-transition);
+    letter-spacing: 0.01em;
+}
+
+.kb-navbar .nav-link:hover {
+    color: var(--kb-text) !important;
+    border-bottom-color: var(--kb-gold-dim);
+    background-color: rgba(255, 255, 255, 0.03);
+}
+
+.kb-navbar .nav-link.active {
+    color: var(--kb-gold) !important;
+    border-bottom-color: var(--kb-gold) !important;
+    font-weight: 600 !important;
+}
+
+.kb-navbar-status {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 0;
+}
+
+.kb-status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.kb-status-dot.active {
+    background-color: var(--kb-long);
+    box-shadow: 0 0 6px var(--kb-long);
+}
+
+.kb-status-dot.idle {
+    background-color: #666;
+}
+
+/* ---- 5. STAT CARDS ---- */
+.kb-stat-card {
+    background-color: var(--kb-card);
+    border: 1px solid var(--kb-border);
+    border-radius: var(--kb-radius);
+    padding: 20px 16px;
+    text-align: center;
+    transition: var(--kb-transition);
+    position: relative;
+    overflow: hidden;
+}
+
+.kb-stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: var(--kb-gold);
+    opacity: 0;
+    transition: var(--kb-transition);
+}
+
+.kb-stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--kb-shadow-hover);
+    border-color: rgba(212, 160, 23, 0.2);
+}
+
+.kb-stat-card:hover::before {
+    opacity: 1;
+}
+
+.kb-stat-card .kb-stat-icon {
+    font-size: 1.2rem;
+    margin-bottom: 8px;
+    opacity: 0.6;
+}
+
+.kb-stat-card .kb-stat-value {
+    font-size: 1.75rem;
+    font-weight: 800;
+    font-family: var(--kb-font-body);
+    margin: 4px 0;
+    letter-spacing: -0.02em;
+}
+
+.kb-stat-card .kb-stat-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--kb-text-muted);
+    margin: 0;
+}
+
+/* ---- Clickable stat tile states ---- */
+/* Tiles with n_clicks (clickable=True) get pointer and active styling */
+.kb-stat-card[style*="pointer"] {
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+.kb-stat-card[style*="pointer"]:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 0 18px rgba(212, 160, 23, 0.25);
+    border-color: rgba(212, 160, 23, 0.45) !important;
+}
+
+.kb-stat-card[style*="pointer"]:hover::before {
+    opacity: 1;
+}
+
+/* Active tile — gold border + faint glow to show current filter */
+.kb-stat-tile-active {
+    border-color: var(--kb-gold) !important;
+    box-shadow: 0 0 20px rgba(212, 160, 23, 0.35) !important;
+}
+
+.kb-stat-tile-active::before {
+    opacity: 1 !important;
+}
+
+/* Click ripple feedback */
+.kb-stat-card[style*="pointer"]:active {
+    transform: translateY(0px) scale(0.97);
+    box-shadow: 0 0 10px rgba(212, 160, 23, 0.4) !important;
+    border-color: var(--kb-gold) !important;
+    transition: transform 0.08s ease, box-shadow 0.08s ease;
+}
+
+/* ---- 6. SECTION HEADERS ---- */
+.kb-section-header {
+    padding: 24px 0 16px 0;
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--kb-border);
+    animation: kb-fadeIn 0.4s ease-out both;
+}
+
+.kb-section-header h2 {
+    color: var(--kb-text) !important;
+    margin-bottom: 4px !important;
+}
+
+.kb-section-desc {
+    color: var(--kb-text-muted);
+    font-size: 0.85rem;
+    font-weight: 400;
+    margin: 0;
+}
+
+.kb-section-badge {
+    display: inline-block;
+    background: var(--kb-gold-dim);
+    color: var(--kb-gold);
+    font-size: 0.65rem;
+    font-weight: 600;
+    padding: 2px 10px;
+    border-radius: 20px;
+    margin-left: 12px;
+    letter-spacing: 0.05em;
+    vertical-align: middle;
+}
+
+/* ---- 7. CARDS & CONTAINERS ---- */
+.kb-card {
+    background-color: var(--kb-card);
+    border: 1px solid var(--kb-border);
+    border-radius: var(--kb-radius);
+    padding: 20px;
+    transition: var(--kb-transition);
+}
+
+.kb-card:hover {
+    border-color: rgba(212, 160, 23, 0.12);
+}
+
+.kb-card-elevated {
+    background-color: var(--kb-card-elevated);
+}
+
+.kb-page-content {
+    max-width: 1600px;
+    margin: 0 auto;
+    padding: 24px 32px;
+}
+
+/* ---- 8. BANNERS (Regime, Time Guard) ---- */
+.kb-banner {
+    background-color: var(--kb-card);
+    border: 1px solid var(--kb-border);
+    border-radius: var(--kb-radius);
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+    transition: var(--kb-transition);
+}
+
+.kb-banner:hover {
+    border-color: rgba(212, 160, 23, 0.12);
+}
+
+.kb-banner-risk-on {
+    border-left: 3px solid var(--kb-long);
+}
+
+.kb-banner-risk-off {
+    border-left: 3px solid var(--kb-short);
+}
+
+.kb-banner-neutral {
+    border-left: 3px solid var(--kb-neutral);
+}
+
+/* ---- 9. BUTTONS ---- */
+.kb-btn-primary {
+    background-color: var(--kb-gold) !important;
+    color: var(--kb-bg) !important;
+    border: none !important;
+    font-weight: 600 !important;
+    font-family: var(--kb-font-body) !important;
+    padding: 8px 20px !important;
+    border-radius: var(--kb-radius-sm) !important;
+    transition: var(--kb-transition);
+    letter-spacing: 0.02em;
+}
+
+.kb-btn-primary:hover {
+    background-color: var(--kb-gold-light) !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(212, 160, 23, 0.3);
+}
+
+.kb-btn-secondary {
+    background-color: transparent !important;
+    color: var(--kb-text-muted) !important;
+    border: 1px solid var(--kb-border) !important;
+    font-weight: 500 !important;
+    font-family: var(--kb-font-body) !important;
+    padding: 8px 16px !important;
+    border-radius: var(--kb-radius-sm) !important;
+    transition: var(--kb-transition);
+}
+
+.kb-btn-secondary:hover {
+    border-color: var(--kb-gold) !important;
+    color: var(--kb-gold) !important;
+}
+
+/* ---- 10. MODERN DATATABLE ---- */
+
+/* Force dark background on ALL table ancestors so rgba values
+   composite over dark, not the browser-default white.             */
+.dash-spreadsheet-container,
+.dash-spreadsheet-container .dash-spreadsheet-inner,
+.dash-spreadsheet-container .dash-spreadsheet-inner table,
+.dash-spreadsheet-container .dash-spreadsheet-inner tbody,
+.dash-spreadsheet-container .dash-spreadsheet-inner thead,
+.dash-spreadsheet-container .dash-spreadsheet-inner tr {
+    background-color: var(--kb-bg) !important;
+}
+
+/* Header row */
+.dash-spreadsheet .dash-header {
+    background-color: var(--kb-card) !important;
+}
+
+.dash-spreadsheet .dash-header .dash-header-cell {
+    font-family: var(--kb-font-body) !important;
+}
+
+/* Ensure all table cells have dark backgrounds by default */
+.dash-spreadsheet td {
+    background-color: var(--kb-bg) !important;
+}
+
+/* Row hover — subtle gold tint over guaranteed dark parent */
+.dash-spreadsheet tr:hover td {
+    background-color: #15140f !important;
+}
+
+.dash-spreadsheet td.dash-cell {
+    transition: background-color 0.15s ease;
+}
+
+/* Active cell outline */
+.dash-spreadsheet td.focused {
+    outline: 1px solid var(--kb-gold) !important;
+    background-color: #1a1810 !important;
+}
+
+/* Kill Dash default white active/selected row backgrounds */
+.dash-spreadsheet td.cell--selected,
+.dash-spreadsheet td.focused,
+.dash-spreadsheet .dash-cell.focused,
+.dash-spreadsheet .dash-cell.cell--selected,
+.dash-spreadsheet td.dash-select-cell,
+.dash-spreadsheet .row--selected td,
+.dash-spreadsheet tr.row--selected td {
+    background-color: #1d1b12 !important;
+    color: #ffffff !important;
+}
+
+/* Alternating rows — solid color, not transparent */
+.dash-spreadsheet tr:nth-child(odd) td {
+    background-color: #0d0f15 !important;
+}
+
+/* Override Dash input/filter cell active states */
+.dash-spreadsheet td.dash-cell.column-0.unfocused,
+.dash-spreadsheet td.dash-cell.unfocused {
+    background-color: var(--kb-bg) !important;
+}
+
+/* ---- 11. REPORTS SUB-TABS (restyle dcc.Tabs) ---- */
+#reports-tabs {
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+}
+
+#reports-tabs .tab {
+    background: transparent !important;
+    border: none !important;
+    color: var(--kb-text-muted) !important;
+    font-size: 0.82rem !important;
+    font-weight: 500 !important;
+    font-family: var(--kb-font-body) !important;
+    padding: 8px 16px !important;
+    border-radius: 6px !important;
+    transition: var(--kb-transition);
+}
+
+#reports-tabs .tab:hover {
+    background: var(--kb-gold-dim) !important;
+    color: var(--kb-text) !important;
+}
+
+#reports-tabs .tab--selected {
+    background: var(--kb-gold-dim) !important;
+    color: var(--kb-gold) !important;
+    font-weight: 600 !important;
+}
+
+/* ---- 12. DROPDOWN OVERRIDES (Dash 4.0 Native Dropdown) ---- */
+
+/* Trigger bar (the closed-state visible element) */
+.dash-dropdown .dash-dropdown-trigger,
+.dash-dropdown .dash-dropdown-wrapper {
+    background-color: var(--kb-card) !important;
+    border: 1px solid var(--kb-border) !important;
+    min-height: 36px !important;
+    cursor: pointer !important;
+    transition: var(--kb-transition);
+    border-radius: 4px !important;
+}
+
+.dash-dropdown .dash-dropdown-trigger:hover,
+.dash-dropdown .dash-dropdown-wrapper:hover {
+    border-color: var(--kb-gold) !important;
+}
+
+/* Selected value — bright white, full opacity */
+.dash-dropdown .dash-dropdown-value {
+    color: #ffffff !important;
+    font-weight: 500 !important;
+}
+
+.dash-dropdown .dash-dropdown-value-item {
+    color: #ffffff !important;
+    font-weight: 500 !important;
+}
+
+/* Single-select: value text inherits white */
+.dash-dropdown.single-select .dash-dropdown-value,
+.dash-dropdown.single-select .dash-dropdown-value-item {
+    color: #ffffff !important;
+}
+
+/* Placeholder — visible but muted */
+.dash-dropdown .dash-dropdown-placeholder {
+    color: var(--kb-text-muted) !important;
+    opacity: 0.8 !important;
+    font-weight: 400 !important;
+}
+
+/* Search input text */
+.dash-dropdown .dash-dropdown-search {
+    color: #ffffff !important;
+    caret-color: var(--kb-gold) !important;
+    background-color: transparent !important;
+}
+
+.dash-dropdown .dash-dropdown-search-container {
+    background-color: var(--kb-card) !important;
+    border-color: var(--kb-border) !important;
+}
+
+/* Multi-select value chips */
+.dash-dropdown:not(.single-select) .dash-dropdown-value-item {
+    background-color: var(--kb-gold-dim) !important;
+    border: 1px solid rgba(212, 160, 23, 0.4) !important;
+    border-radius: 4px !important;
+    color: var(--kb-gold) !important;
+    font-size: 12px !important;
+    font-weight: 500 !important;
+    padding: 2px 6px !important;
+}
+
+/* Multi-select value count badge (+N) */
+.dash-dropdown .dash-dropdown-value-count {
+    color: var(--kb-gold) !important;
+    font-weight: 600 !important;
+}
+
+/* Dropdown menu (open list) */
+.dash-dropdown .dash-dropdown-content {
+    background-color: var(--kb-card) !important;
+    border: 1px solid var(--kb-border) !important;
+    z-index: 10000 !important;
+}
+
+.dash-dropdown .dash-dropdown-options {
+    background-color: var(--kb-card) !important;
+}
+
+/* Dropdown options */
+.dash-dropdown .dash-dropdown-option,
+.dash-options-list-option-wrapper {
+    background-color: var(--kb-card) !important;
+    color: var(--kb-text) !important;
+    transition: background-color 0.15s ease;
+}
+
+.dash-dropdown .dash-dropdown-option:hover,
+.dash-options-list-option-wrapper:hover {
+    background-color: var(--kb-card-elevated) !important;
+    color: #ffffff !important;
+}
+
+/* Currently selected option in the open list */
+.dash-dropdown .dash-dropdown-option[aria-selected="true"],
+.dash-dropdown .dash-dropdown-option.selected {
+    background-color: var(--kb-gold-dim) !important;
+    color: var(--kb-gold) !important;
+    font-weight: 600 !important;
+}
+
+/* Icons and indicators (arrow, clear, search icon) */
+.dash-dropdown .dash-dropdown-trigger-icon,
+.dash-dropdown .dash-dropdown-clear,
+.dash-dropdown .dash-dropdown-search-icon,
+.dash-dropdown .dash-dropdown-actions,
+.dash-dropdown .dash-dropdown-action-button,
+.dash-dropdown svg {
+    color: var(--kb-text-muted) !important;
+    fill: var(--kb-text-muted) !important;
+}
+
+/* Grid container (Dash 4.0 layout) */
+.dash-dropdown .dash-dropdown-grid-container {
+    background-color: var(--kb-card) !important;
+}
+
+/* Multi-select checkbox styling */
+.dash-options-list-option-checkbox {
+    accent-color: var(--kb-gold) !important;
+}
+
+/* Fallback: ensure ALL text inside dropdown inherits white */
+.dash-dropdown,
+.dash-dropdown div,
+.dash-dropdown span,
+.dash-dropdown input {
+    color: #ffffff !important;
+}
+
+/* ---- 13. DATATABLE FILTER ROW ---- */
+.dash-spreadsheet .dash-filter input,
+.dash-spreadsheet-container .dash-filter input {
+    color: var(--kb-text) !important;
+    background-color: var(--kb-card) !important;
+    border: 1px solid var(--kb-border) !important;
+    font-size: 12px !important;
+    padding: 4px 6px !important;
+    transition: border-color 0.2s ease;
+}
+
+.dash-spreadsheet .dash-filter input::placeholder {
+    color: #555 !important;
+}
+
+.dash-spreadsheet .dash-filter input:focus {
+    border-color: var(--kb-gold) !important;
+    outline: none !important;
+}
+
+/* Hide "Toggle Columns" */
+.dash-spreadsheet .show-hide {
+    display: none !important;
+}
+
+/* ---- 14. TOOLTIPS ---- */
+.dash-table-tooltip {
+    background-color: var(--kb-card) !important;
+    color: var(--kb-text) !important;
+    border: 1px solid var(--kb-gold) !important;
+    border-radius: var(--kb-radius-sm) !important;
+    padding: 10px 14px !important;
+    font-size: 12px !important;
+    max-width: 320px !important;
+    box-shadow: var(--kb-shadow) !important;
+    z-index: 10000 !important;
+    line-height: 1.4 !important;
+}
+
+/* ---- 15. SCROLLBAR ---- */
+.dash-spreadsheet ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.dash-spreadsheet ::-webkit-scrollbar-track {
+    background: var(--kb-bg);
+}
+
+.dash-spreadsheet ::-webkit-scrollbar-thumb {
+    background: #333;
+    border-radius: 4px;
+}
+
+.dash-spreadsheet ::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+/* Global scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--kb-bg);
+}
+
+::-webkit-scrollbar-thumb {
+    background: #333;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+/* ---- 16. SLIDER ---- */
+.rc-slider-track {
+    background-color: var(--kb-gold) !important;
+}
+
+.rc-slider-handle {
+    border-color: var(--kb-gold) !important;
+    background-color: var(--kb-gold) !important;
+}
+
+.rc-slider-dot-active {
+    border-color: var(--kb-gold) !important;
+}
+
+/* ---- 17. PAGINATION ---- */
+.dash-spreadsheet .previous-next-container {
+    color: var(--kb-text) !important;
+}
+
+.dash-spreadsheet .previous-next-container button {
+    color: var(--kb-text) !important;
+    background-color: var(--kb-card) !important;
+    border: 1px solid var(--kb-border) !important;
+    border-radius: var(--kb-radius-sm) !important;
+    padding: 4px 12px !important;
+    transition: var(--kb-transition);
+}
+
+.dash-spreadsheet .previous-next-container button:hover {
+    background-color: var(--kb-card-elevated) !important;
+    border-color: var(--kb-gold) !important;
+}
+
+/* ---- 18. STOCK IDEAS — TRIGGER BADGES ---- */
+.kb-trigger-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    margin-right: 4px;
+    margin-bottom: 2px;
+    font-family: var(--kb-font-mono);
+}
+.kb-trigger-badge.gex    { background: rgba(0, 210, 106, 0.15); color: #00d26a; }
+.kb-trigger-badge.vwap   { background: rgba(77, 163, 255, 0.15); color: #4da3ff; }
+.kb-trigger-badge.vwap-rev { background: rgba(0, 188, 212, 0.15); color: #00bcd4; }
+.kb-trigger-badge.sweep  { background: rgba(212, 160, 23, 0.15); color: var(--kb-gold); }
+.kb-trigger-badge.fvg    { background: rgba(163, 120, 255, 0.15); color: #a378ff; }
+.kb-trigger-badge.rsi-div { background: rgba(255, 152, 0, 0.15); color: #ff9800; }
+.kb-trigger-badge.mtf    { background: rgba(0, 210, 106, 0.15); color: #00d26a; }
+.kb-trigger-badge.inst   { background: rgba(0, 188, 178, 0.15); color: #00bcb2; }
+.kb-trigger-badge.sqz    { background: rgba(255, 0, 110, 0.15); color: #ff006e; }
+.kb-trigger-badge.ins    { background: rgba(212, 160, 23, 0.15); color: var(--kb-gold); }
+.kb-trigger-badge.lock   { background: rgba(232, 185, 48, 0.2); color: var(--kb-gold-light); }
+
+/* ---- 19. OPTIONS IDEAS — FLAG BADGES ---- */
+.kb-flag-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    margin-right: 4px;
+    margin-bottom: 2px;
+    font-family: var(--kb-font-mono);
+}
+.kb-flag-badge.gamma-sqz { background: rgba(255, 0, 110, 0.2); color: #ff006e; border: 1px solid rgba(255, 0, 110, 0.3); }
+.kb-flag-badge.zero-dte  { background: rgba(255, 193, 7, 0.2); color: #ffc107; border: 1px solid rgba(255, 193, 7, 0.3); }
+.kb-flag-badge.sweep     { background: rgba(212, 160, 23, 0.15); color: var(--kb-gold); }
+.kb-flag-badge.fvg       { background: rgba(163, 120, 255, 0.15); color: #a378ff; }
+.kb-flag-badge.vwap-rev  { background: rgba(0, 188, 212, 0.15); color: #00bcd4; }
+.kb-flag-badge.rsi-div   { background: rgba(255, 152, 0, 0.15); color: #ff9800; }
+.kb-flag-badge.inst      { background: rgba(0, 188, 178, 0.15); color: #00bcb2; }
+
+/* ---- 20. SQUEEZER BAR (Institutional Pressure) ---- */
+.kb-squeezer-bar {
+    height: 6px;
+    border-radius: 3px;
+    background: linear-gradient(90deg, #2a2e3a 0%, #2a2e3a 100%);
+    overflow: hidden;
+    position: relative;
+}
+.kb-squeezer-bar .kb-squeezer-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.4s ease;
+}
+.kb-squeezer-bar .kb-squeezer-fill.low    { background: linear-gradient(90deg, #2a2e3a, #555); }
+.kb-squeezer-bar .kb-squeezer-fill.medium { background: linear-gradient(90deg, #555, var(--kb-gold)); }
+.kb-squeezer-bar .kb-squeezer-fill.high   { background: linear-gradient(90deg, var(--kb-gold), #ff9800); }
+.kb-squeezer-bar .kb-squeezer-fill.extreme { background: linear-gradient(90deg, #ff9800, #ff006e); }
+
+/* ---- 21. GOLDEN SQUEEZE BADGE ---- */
+.kb-golden-squeeze {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 6px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    background: linear-gradient(135deg, rgba(212, 160, 23, 0.3), rgba(232, 185, 48, 0.15));
+    color: var(--kb-gold-light);
+    border: 1px solid rgba(212, 160, 23, 0.4);
+    animation: kb-golden-pulse 2s ease-in-out infinite;
+}
+@keyframes kb-golden-pulse {
+    0%, 100% { box-shadow: 0 0 4px rgba(212, 160, 23, 0.2); }
+    50% { box-shadow: 0 0 12px rgba(212, 160, 23, 0.4); }
+}
+
+/* ---- 22. CONFIRMATION BADGE (Longterm tiers) ---- */
+.kb-confirmation-badge {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    font-family: var(--kb-font-mono);
+}
+.kb-confirmation-badge.platinum { background: rgba(0, 210, 106, 0.15); color: #00d26a; }
+.kb-confirmation-badge.ultimate { background: rgba(212, 160, 23, 0.15); color: var(--kb-gold); }
+.kb-confirmation-badge.gold { background: rgba(255, 193, 7, 0.15); color: #ffc107; }
+
+/* ---- 23. RESPONSIVE ---- */
+@media (max-width: 768px) {
+    .card {
+        margin-bottom: 8px;
+    }
+    .kb-navbar .nav-link {
+        padding: 10px 12px !important;
+        font-size: 0.78rem !important;
+    }
+    .kb-page-content {
+        padding: 16px;
+    }
+    .kb-stat-card .kb-stat-value {
+        font-size: 1.3rem;
+    }
+}

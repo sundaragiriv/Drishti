@@ -1,0 +1,12 @@
+# Custom watchlist — edit this file to add your own symbols
+# One symbol per line, lines starting with # are ignored
+SPY
+QQQ
+IWM
+AAPL
+MSFT
+NVDA
+TSLA
+AMD
+META
+GOOGL

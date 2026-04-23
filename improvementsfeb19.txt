@@ -1,0 +1,52 @@
+its not important to generate signals, it is important to generate quality signals, should we add studies or indicatprs, mTF value gaps or SMA studies to comibile signal confirmation
+Good instinct. More signals is the wrong goal — higher conviction per signal is. Let me audit what you already have vs. what's actually being scored, then give a clear recommendation.
+
+What's already computed but NOT scored (free data being wasted):
+
+Field	Computed?	Scored?
+vwap_zscore / vwap_std	✅	❌ — VWAP factor is binary (above/below)
+prior_day_high / prior_day_low / prior_day_close	✅	❌ — stored but ignored in confluence
+rsi_bull_divergence / rsi_bear_divergence	✅	❌ — stored but ignored
+sweep_reclaim_signal	✅	❌ — stored but ignored
+Per-TF RSI from 5m/15m/1h	✅	Partial — only best TF used
+What's missing entirely that matters most for day trading:
+
+Fair Value Gaps (FVGs) — 3-bar price imbalances where institutional order flow left a footprint. Price retesting an FVG zone = highest-conviction entry available in intraday. Currently no detection at all.
+
+Opening Range (ORB) — first 15-30 min establishes a range. Breaking ORB high/low with volume is the highest-probability EARLY session setup. You have EARLY session tagged but no ORB logic.
+
+MTF RSI alignment — you have RSI on all 3 timeframes but collapse to just the best one. True 3-TF RSI agreement (all three pointing same direction) is a multiplier, not just one score.
+
+Prior Day Levels as confluence — PDH, PDL, PDC are treated as metadata. They should be scored: LONG breaking above PDH = bullish, LONG entry near PDL = support below. You have the data, just not using it.
+
+My recommendation — 3-phase approach:
+
+Phase 1: Activate what you already have (1 day, zero new data)
+
+Extend VWAP factor from binary (above/below = 10pts) to gradient using vwap_zscore — price at 1σ above VWAP scores 6, at 2σ scores 10, etc.
+Add prior day level scoring into the SMA factor — breaking PDH or holding above PDC adds confluence points
+Wire rsi_bull_divergence / rsi_bear_divergence as a score bonus in RSI factor
+Add sweep_reclaim_signal as a bonus to the Volume factor when BULLISH/BEARISH_SWEEP_RECLAIM present
+Add MTF RSI alignment check in signal_ranker.aggregate_mtf — if all 3 TF RSIs agree, apply a small multiplier (1.1×) to avg_score
+This alone takes your existing 6 factors from partially utilized to fully utilized. No new indicators, no new IBKR calls.
+
+Phase 2: Fair Value Gaps (highest-value new study)
+
+Add _detect_fvg() to TechnicalAnalyzer — simple 3-bar scan looking for imbalance gaps
+FVG bullish: bar[i].low > bar[i-2].high (gap up, price never traded through)
+FVG bearish: bar[i].high < bar[i-2].low
+Score FVG retest as high conviction: price entering a bullish FVG = +15 pts to LONG score
+This is pure price action, no indicators, works directly from OHLCV
+Phase 3: Opening Range Breakout (EARLY session only)
+
+Compute ORB during EARLY session tag — first 30 min range (high/low)
+Cache ORB per symbol per day
+During MID_DAY/POWER_HOUR: score ORB breakout direction as additional confirmation
+LONG + price above ORB high = strong trend continuation signal
+What NOT to add:
+
+MACD — redundant with RSI momentum, just lagged differently
+Bollinger Bands — VWAP bands (you already compute) serve the same intraday purpose better
+Stochastics / CCI — noise at these timeframes
+More SMAs — you have 50/200 which is sufficient
+Want me to implement Phase 1 now (activating the data you're already computing but discarding)? That's the cleanest immediate win before Phase 2
