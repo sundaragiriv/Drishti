@@ -553,6 +553,40 @@ class DatabaseManager:
             rows = conn.execute(sql, (limit,)).fetchall()
             return [dict(row) for row in rows]
 
+    def get_realized_pnl_since(self, since_iso: str) -> float:
+        """Sum realized_pnl for CLOSED trades with closed_at >= since_iso (UTC ISO)."""
+        sql = """
+            SELECT COALESCE(SUM(realized_pnl), 0) AS v
+            FROM paper_trades
+            WHERE status = 'CLOSED' AND closed_at >= ?
+        """
+        with self._get_connection() as conn:
+            row = conn.execute(sql, (since_iso,)).fetchone()
+        return float(row["v"] or 0.0)
+
+    def get_open_risk_at_stop(self) -> float:
+        """Sum of (entry_price - stop_loss) * quantity across OPEN positions, sign-aware.
+        Returns total dollar risk if all open positions hit their stops."""
+        sql = """
+            SELECT side, entry_price, stop_loss, quantity
+            FROM paper_trades
+            WHERE status = 'OPEN' AND stop_loss IS NOT NULL AND stop_loss > 0
+        """
+        total = 0.0
+        with self._get_connection() as conn:
+            rows = conn.execute(sql).fetchall()
+        for r in rows:
+            side = str(r["side"] or "").upper()
+            ep = float(r["entry_price"] or 0.0)
+            sl = float(r["stop_loss"] or 0.0)
+            qty = float(r["quantity"] or 0.0)
+            if ep <= 0 or sl <= 0 or qty <= 0:
+                continue
+            risk = (ep - sl) * qty if side == "LONG" else (sl - ep) * qty
+            if risk > 0:
+                total += risk
+        return total
+
     def get_symbol_recent_loss_count(self, symbol: str, limit: int = 5) -> int:
         """Return count of losing trades in last N CLOSED trades for a symbol."""
         sql = """

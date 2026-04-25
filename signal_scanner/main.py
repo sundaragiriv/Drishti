@@ -431,20 +431,6 @@ def main() -> None:
         finally:
             ibkr_lock.release()
 
-    # Legacy alias so the initial-scan trigger still works
-    def run_scan_job() -> None:
-        """DISABLED — replaced by local data plane architecture (Phase A).
-
-        Bar printer (own thread) fetches bars → SQLite.
-        Strategy engine evaluates locally. No IBKR scan loop needed.
-
-        run_execution_scan() and run_research_scan() still exist in this file
-        for potential future non-market-hours use (e.g. post-market research
-        scans). They are structurally retained but operationally disabled.
-        Structural removal is deferred to Phase H cleanup.
-        """
-        return
-
     def run_ibkr_heartbeat() -> None:
         """Retry IBKR connection independently from scan schedule."""
         if connector.is_connected():
@@ -454,18 +440,6 @@ def main() -> None:
             logger.info("IBKR heartbeat reconnected successfully")
         else:
             logger.warning("IBKR heartbeat reconnect failed; will retry")
-
-    # Schedule recurring scans
-    scheduler.add_job(
-        run_scan_job,
-        trigger="interval",
-        seconds=scan_interval,
-        id="main_scan",
-        name="Signal Scanner",
-        max_instances=1,
-        coalesce=True,
-        misfire_grace_time=60,
-    )
 
     scheduler.add_job(
         run_ibkr_heartbeat,
@@ -962,21 +936,6 @@ def main() -> None:
             name="Price Backfill",
             max_instances=1,
         )
-
-    # Schedule the first scan to fire immediately (non-blocking).
-    # Use execution scan (budgeted, fast) instead of run_scan_job to prevent
-    # a full-universe research scan from blocking intraday scanners at market open.
-    def _initial_scan() -> None:
-        """DISABLED — data plane handles all scanning."""
-        return
-
-    scheduler.add_job(
-        _initial_scan,
-        trigger="date",
-        run_date=datetime.now(timezone.utc),
-        id="initial_scan",
-        name="Initial Scan",
-    )
 
     # -- LOCAL INTRADAY DATA PLANE --
     # Architecture: Bar Printer (IBKR→SQLite) → Strategy Engine (SQLite→evaluate)

@@ -7,6 +7,25 @@ V2 additions over V1:
   - Sector relative momentum
   - Asymmetric RR target: hits +2% before -1% within 5 days
   - Multi-day candle patterns (3-day momentum, gap)
+
+POINT-IN-TIME LEAKAGE WARNING (review item #5)
+-----------------------------------------------
+The composite scores `ml_score_v2`, `conviction_score`, `squeeze_score`,
+`insider_effect_score` etc. are *recomputed each EOD* and OVERWRITE prior
+values for the same (ticker, report_quarter) row. If a v2 model is retrained
+later and we then use this feature matrix to train v3, we have model-on-model
+leakage — v3 sees v2 scores produced by a model trained on data overlapping
+v3's training window.
+
+Mitigation (as of 2026-04-24):
+- `intelligence_scores.ml_score_v2_version` stamps the model version that
+  produced each row's ml_score_v2.
+- `intelligence_scores.ml_score_v2_scored_at` stamps when it was scored.
+- Before training v3, filter: WHERE ml_score_v2_scored_at <= <feature_date>.
+  Today (2026-04-24) all rows are scored 2026-04-24 — so any v3 trained
+  on data through 2026-Q1 has full leakage. Need to backfill historical
+  scoring by retraining v2 on each historical quarter and stamping
+  appropriately. Tracking this as a separate task.
 """
 import duckdb, time, os
 

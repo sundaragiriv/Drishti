@@ -15,3 +15,8 @@ signal_scanner/data/*.db-wal
 
 # Secrets
 .env
+
+# Pytest
+.pytest_tmp/
+.pytest_cache/
+.tmp/

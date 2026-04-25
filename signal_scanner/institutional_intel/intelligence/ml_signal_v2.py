@@ -30,7 +30,7 @@ from __future__ import annotations
 import argparse
 import math
 import pickle
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from typing import List, Optional
 
@@ -52,6 +52,13 @@ from signal_scanner.institutional_intel.intelligence.ml_signal import (
 # ---------------------------------------------------------------------------
 _MODELS_DIR = WAREHOUSE_PATH.parents[1] / "models"
 _MODEL_PATH_V2 = _MODELS_DIR / "ml_signal_v2.pkl"
+
+# Stamp every scored row with this version + timestamp. Bump _MODEL_VERSION
+# when retraining materially changes feature handling, label definition,
+# or hyperparameters. Used by training data builders to enforce
+# point-in-time correctness — never feed v3 a row whose ml_score_v2
+# was scored with a model trained AFTER the row's trade_date.
+_MODEL_VERSION = "v2.0-2026-02"  # bump on retrain
 
 # ---------------------------------------------------------------------------
 # Feature columns — v1 baseline + 7 new signals
@@ -662,6 +669,7 @@ def score_quarter_v2(
 
     if write_to_db:
         _ensure_ml_score_v2_columns(conn)
+        scored_at_ts = datetime.now(timezone.utc)
         rows = [
             (
                 float(r["ml_score_v2"]),
@@ -669,6 +677,8 @@ def score_quarter_v2(
                 float(r["f4_distinct_insiders_60d"]),
                 float(r["price_momentum_90d"]),
                 float(r.get("price_above_200sma", -1)),
+                _MODEL_VERSION,
+                scored_at_ts,
                 r["ticker"], quarter,
             )
             for _, r in result.iterrows()
@@ -679,11 +689,16 @@ def score_quarter_v2(
                    triple_lock = ?,
                    inst_f4_distinct_60d = ?,
                    price_momentum_90d = ?,
-                   price_above_200sma = ?
+                   price_above_200sma = ?,
+                   ml_score_v2_version = ?,
+                   ml_score_v2_scored_at = ?
                WHERE ticker = ? AND report_quarter = ?""",
             rows,
         )
-        logger.info("Wrote ml_score_v2 + triple_lock for {} tickers in {}", len(rows), quarter)
+        logger.info(
+            "Wrote ml_score_v2={} + triple_lock for {} tickers in {} (scored_at={})",
+            _MODEL_VERSION, len(rows), quarter, scored_at_ts.isoformat(),
+        )
 
     return result
 
@@ -696,6 +711,9 @@ def _ensure_ml_score_v2_columns(conn: duckdb.DuckDBPyConnection) -> None:
         ("inst_f4_distinct_60d",  "REAL DEFAULT 0.0"),
         ("price_momentum_90d",    "REAL DEFAULT 0.0"),
         ("price_above_200sma",    "REAL DEFAULT -1"),
+        # Provenance — used by feature builders for point-in-time correctness.
+        ("ml_score_v2_version",   "VARCHAR"),
+        ("ml_score_v2_scored_at", "TIMESTAMP"),
     ]
     for col, dtype in new_cols:
         try:

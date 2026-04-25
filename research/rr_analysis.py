@@ -1,6 +1,20 @@
-"""Deep RR analysis: ATR-based R-multiples, hit rates, expectancy."""
-import duckdb, time
+"""Deep RR analysis: ATR-based R-multiples, hit rates, expectancy.
+
+Now reports BOTH gross and net-of-cost expectancy. Default cost = 1bp comm
++ 4bp half-spread roundtrip + 0.10 ATR slippage roundtrip ≈ 0.08 R per trade.
+Override via env var QUANT_BRIDGE_COST_R (e.g. `QUANT_BRIDGE_COST_R=0.0` = gross).
+"""
+import duckdb, os, time
+from signal_scanner.intelligence.backtest_costs import Cost
 t0 = time.time()
+
+# Cost per trade as R-multiple. Approximation: in the 1R-stop / 2R-target frame
+# below, r_unit = ATR, atr_for_cost = ATR (same), so compute on a representative
+# point (entry $100, r_unit 1.0) and reuse — equivalent to a single R-deduction.
+_default_cost = Cost()
+COST_R = float(os.environ.get("QUANT_BRIDGE_COST_R",
+                              _default_cost.compute_r_cost(entry_price=100.0, r_unit=1.0, atr=1.0)))
+print(f"[Cost model] {_default_cost} -> per-trade cost ~{COST_R:.4f} R")
 conn = duckdb.connect('data/warehouse/sec_intel.duckdb', read_only=True)
 
 print("=" * 70)
@@ -164,8 +178,8 @@ best_combos = [
     ("Conv>=65 + Above200 + Aligned + PB", "conviction_score >= 65 AND above_200 = 1 AND sma20_gt_50 = 1 AND ret_5d < -0.02"),
 ]
 
-print(f"\n{'Setup':<40} {'N':>7} {'2R Hit':>7} {'Stopped':>8} {'Expect':>8} {'Avg5d':>8} {'Avg10d':>8}")
-print("-" * 85)
+print(f"\n{'Setup':<40} {'N':>7} {'2R Hit':>7} {'Stopped':>8} {'Gross':>7} {'Net':>7} {'Avg5d':>8} {'Avg10d':>8}")
+print("-" * 92)
 
 for label, where in best_combos:
     r = conn.execute(f"""
@@ -180,8 +194,9 @@ for label, where in best_combos:
         continue
     hit = r[1]/100
     stop = r[2]/100
-    exp = hit * 2 - stop * 1
-    print(f"{label:<40} {r[0]:>7,} {r[1]:>6.1f}% {r[2]:>7.1f}% {exp:>+7.3f}R {r[3]:>+7.3f}% {r[4]:>+7.3f}%")
+    exp_gross = hit * 2 - stop * 1
+    exp_net = exp_gross - COST_R
+    print(f"{label:<40} {r[0]:>7,} {r[1]:>6.1f}% {r[2]:>7.1f}% {exp_gross:>+6.3f}R {exp_net:>+6.3f}R {r[3]:>+7.3f}% {r[4]:>+7.3f}%")
 
 # ---------------------------------------------------------------
 # YEARLY CONSISTENCY

@@ -127,6 +127,9 @@ class ScannerConfig:
     paper_flip_rate_trigger_pct: float = 35.0
     paper_flip_confirm_cycles: int = 3               # More patience before flip exit (was 2)
     paper_require_flip_confirmation_always: bool = True
+    # Daily risk kill-switch — block new entries once breached (trips reset at NY midnight)
+    paper_daily_max_drawdown_pct: float = 2.0        # % of starting capital; 2% = $20K on $1M
+    paper_global_r_cap_pct: float = 8.0              # Max concurrent $-at-risk across open positions
     options_liquidity_enabled: bool = True
     options_min_open_interest: int = 200
     options_min_volume: int = 25
@@ -180,35 +183,43 @@ class DashboardConfig:
 
 # Confluence scoring weights — must sum to 100
 # Gradient scoring: each factor returns 0 to max_pts (not binary)
+#
+# 2026-04-24: gex_positioning DEMOTED to 0. The OI-only GEX formulation
+# (gex_calculator.py) systematically mis-signs dealer positioning and was
+# never validated against hit-rate in our data. GEX is still computed and
+# shown on the dashboard for visualization; it just no longer steers
+# scoring decisions. The 25 pts were redistributed to rsi_momentum (+10),
+# trend_strength (+10), and vwap_position (+5) — all factors that have at
+# least passed the smoke test of "moves with price action."
 CONFLUENCE_WEIGHTS: Dict[str, int] = {
     "sma_position": 15,
-    "gex_positioning": 25,
-    "rsi_momentum": 20,
+    "gex_positioning": 0,        # was 25
+    "rsi_momentum": 30,          # was 20 (+10)
     "volume_confirmation": 15,
-    "trend_strength": 15,
-    "vwap_position": 10,
+    "trend_strength": 25,        # was 15 (+10)
+    "vwap_position": 15,         # was 10 (+5)
 }
 
 # Regime-adaptive weight profiles — auto-selected based on MarketRegime
 # Each profile must sum to 100.
 REGIME_WEIGHTS: Dict[str, Dict[str, int]] = {
     "RISK_ON": {
-        # Bullish regime: trend & momentum matter most, GEX less critical
+        # Bullish regime: trend & momentum matter most
         "sma_position": 20,
-        "gex_positioning": 15,
-        "rsi_momentum": 25,
+        "gex_positioning": 0,    # was 15
+        "rsi_momentum": 30,      # was 25 (+5)
         "volume_confirmation": 15,
-        "trend_strength": 15,
+        "trend_strength": 25,    # was 15 (+10)
         "vwap_position": 10,
     },
     "RISK_OFF": {
-        # Bearish/volatile regime: GEX & volume spikes are key risk signals
-        "sma_position": 10,
-        "gex_positioning": 30,
-        "rsi_momentum": 15,
-        "volume_confirmation": 20,
-        "trend_strength": 10,
-        "vwap_position": 15,
+        # Bearish/volatile regime: trust volume confirmation, broaden trend
+        "sma_position": 15,      # was 10 (+5)
+        "gex_positioning": 0,    # was 30
+        "rsi_momentum": 20,      # was 15 (+5)
+        "volume_confirmation": 25,  # was 20 (+5)
+        "trend_strength": 20,    # was 10 (+10)
+        "vwap_position": 20,     # was 15 (+5)
     },
     "NEUTRAL": CONFLUENCE_WEIGHTS,  # Default balanced weights
 }

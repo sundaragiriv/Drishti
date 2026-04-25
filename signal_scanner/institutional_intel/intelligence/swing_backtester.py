@@ -33,6 +33,11 @@ import pandas as pd
 from loguru import logger
 
 from signal_scanner.institutional_intel.config import WAREHOUSE_PATH
+from signal_scanner.intelligence.backtest_costs import Cost, ZERO_COST, apply_cost_to_result
+
+# Module-level cost knob — applied in _track_r_targets unless explicitly disabled.
+# Override at runtime: `signal_scanner.institutional_intel.intelligence.swing_backtester.DEFAULT_COST = ZERO_COST`
+DEFAULT_COST: Cost = Cost()  # commission_bps=1, half_spread_bps=2, slip_atr_frac=0.05
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -129,6 +134,8 @@ def _track_r_targets(
     max_hold: int,
     sma_10_series: Optional[pd.Series] = None,
     exit_signal_series: Optional[pd.Series] = None,
+    cost: Optional["Cost"] = None,
+    atr_for_cost: Optional[float] = None,
 ) -> Dict[str, Any]:
     """Track R-target outcomes on daily OHLCV bars after entry.
 
@@ -268,6 +275,13 @@ def _track_r_targets(
             (bar_close - entry_price) / r_unit if is_long
             else (entry_price - bar_close) / r_unit, 2
         )
+
+    # Apply transaction costs (commission + half-spread + slippage) as R-deduction.
+    # `cost=None` falls back to the module-level DEFAULT_COST (currently non-zero).
+    # Pass `cost=ZERO_COST` to bypass for legacy / sanity comparisons.
+    cost_used = cost if cost is not None else DEFAULT_COST
+    if cost_used is not ZERO_COST:
+        apply_cost_to_result(result, entry_price, r_unit, cost_used, atr_for_cost)
 
     return result
 

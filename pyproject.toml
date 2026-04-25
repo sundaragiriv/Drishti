@@ -1,0 +1,72 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "quant-bridge"
+version = "0.4.0"
+description = "Institutional intelligence + ML stock scanner with paper trading"
+requires-python = ">=3.11"
+authors = [{ name = "Venkata R Sundaragiri" }]
+
+dependencies = [
+    "ib_insync>=0.9.86",
+    "pandas>=2.0.0",
+    "pandas-ta>=0.3.14b",
+    "numpy>=1.24.0,<2.0",
+    "scipy>=1.11.0",
+    "plotly>=5.18.0",
+    "dash>=2.14.0",
+    "dash-bootstrap-components>=1.5.0",
+    "dash-bootstrap-templates>=1.1.0",
+    "APScheduler>=3.10.4",
+    "loguru>=0.7.0",
+    "duckdb>=1.1.0",
+    "pyarrow>=17.0.0",
+    "requests>=2.32.0",
+    "lightgbm>=4.0.0",
+    "scikit-learn>=1.3.0",
+    "hmmlearn>=0.3.0",
+    "yfinance>=0.2.40",
+    "win10toast>=0.9 ; platform_system == 'Windows'",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-cov>=5.0",
+    "ruff>=0.6.0",
+    "mypy>=1.10",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["signal_scanner*", "mcp_server*"]
+exclude = ["research*", "tests*", "data*", "logs*", "docs*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests", "signal_scanner/tests"]
+python_files = "test_*.py"
+addopts = "-q --strict-markers --basetemp=.pytest_tmp"
+filterwarnings = [
+    "ignore::DeprecationWarning",
+]
+
+[tool.ruff]
+line-length = 110
+target-version = "py311"
+extend-exclude = ["research", "data", "logs", "docs/archive"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP"]
+ignore = [
+    "E501",  # line length handled by formatter
+    "B008",  # function-call-in-default-argument (FastAPI/Dash use this)
+]
+
+[tool.mypy]
+python_version = "3.11"
+ignore_missing_imports = true
+no_implicit_optional = true
+warn_unused_ignores = true
+exclude = ["research/", "data/", "logs/"]

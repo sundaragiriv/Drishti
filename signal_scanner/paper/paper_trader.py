@@ -33,6 +33,46 @@ class PaperTrader:
         self._flip_pending_counts: Dict[int, int] = {}
         self._last_policy: Dict = self._default_policy()
         self._order_executor = None  # Set by main.py when IBKR live execution enabled
+        self._kill_switch_logged_date: Optional[str] = None  # de-dup log once per NY day
+
+    def _kill_switch_blocked(self) -> Optional[str]:
+        """Return blocking reason string if daily DD or global R cap breached, else None.
+
+        NY-trading-day window. Called before every new entry.
+        """
+        cap = float(self._cfg.paper_starting_capital or 0.0)
+        if cap <= 0:
+            return None
+
+        # Midnight NY today -> UTC ISO for closed_at comparison
+        now_ny = datetime.now(NY_TZ)
+        midnight_ny = now_ny.replace(hour=0, minute=0, second=0, microsecond=0)
+        since_utc_iso = midnight_ny.astimezone(timezone.utc).isoformat()
+
+        dd_pct = float(self._cfg.paper_daily_max_drawdown_pct or 0.0)
+        if dd_pct > 0:
+            realized_today = self._db.get_realized_pnl_since(since_utc_iso)
+            if realized_today <= -abs(dd_pct) * cap / 100.0:
+                return (f"DAILY_DD realized=${realized_today:,.2f} "
+                        f"(limit -{dd_pct:.1f}% = -${abs(dd_pct)*cap/100:,.0f})")
+
+        r_cap_pct = float(self._cfg.paper_global_r_cap_pct or 0.0)
+        if r_cap_pct > 0:
+            open_risk = self._db.get_open_risk_at_stop()
+            if open_risk >= abs(r_cap_pct) * cap / 100.0:
+                return (f"GLOBAL_R open_risk=${open_risk:,.0f} "
+                        f"(cap {r_cap_pct:.1f}% = ${abs(r_cap_pct)*cap/100:,.0f})")
+
+        return None
+
+    def _log_kill_switch(self, reason: str, context: str = "") -> None:
+        """Log kill-switch trip once per NY day to avoid log spam."""
+        today_ny = datetime.now(NY_TZ).date().isoformat()
+        if self._kill_switch_logged_date != today_ny:
+            logger.warning("PAPER KILL-SWITCH TRIPPED: {} {}", reason, context)
+            self._kill_switch_logged_date = today_ny
+        else:
+            logger.debug("PAPER KILL-SWITCH: {} {}", reason, context)
 
     def process_scan_rows(self, rows: List[Dict]) -> None:
         """Apply entry/exit rules against the latest MTF rows."""
@@ -76,6 +116,12 @@ class PaperTrader:
         if self._past_late_entry_cutoff(now_dt):
             record_skip(Subsystem.PAPER_TRADER, SkipReason.LATE_ENTRY_CUTOFF)
             logger.info("PAPER: past late-entry cutoff — skipping new entries")
+            return
+
+        # Daily risk kill-switch — DD or global R cap breached.
+        kill_reason = self._kill_switch_blocked()
+        if kill_reason:
+            self._log_kill_switch(kill_reason, context="(scan entries blocked)")
             return
 
         # Entry checks second.
@@ -227,6 +273,12 @@ class PaperTrader:
         Returns trade_id or None if blocked.
         """
         if not self._cfg.paper_trading_enabled:
+            return None
+
+        # Daily risk kill-switch — DD or global R cap breached.
+        kill_reason = self._kill_switch_blocked()
+        if kill_reason:
+            self._log_kill_switch(kill_reason, context="(idea entry blocked)")
             return None
 
         symbol = str(idea.get("symbol") or "").upper()
