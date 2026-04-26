@@ -8,6 +8,19 @@ For deep technical commits see `git log`. For research artefacts see
 
 ---
 
+## 2026-04-26 (evening) — Navbar rename + P&L Ledger cleared
+
+- **Navbar renamed** for clarity. "Swing Snipers" / "Snipers" was
+  ambiguous (two near-identical labels with similar icons). New nav:
+  **Swing (Multi-Day)** | **Intraday** | **Options** | **Forecast**
+  (disabled placeholder) | **Intelligence** | **P&L Ledger**.
+  Underlying nav-IDs preserved so callbacks keep working — only
+  labels and one icon changed.
+- **P&L Ledger cleared.** All 103 closed paper trades archived to
+  `paper_trades_archive_20260426_191035` (recoverable). `paper_trades`
+  table empty for fresh start Monday.
+- **Dashboard bounced** to pick up rename.
+
 ## 2026-04-26 — Catalyst gate killed (negative result), dashboard bounce
 
 - **Catalyst gate disabled.** Tier 1 historical backtest on 3,255 stock-days

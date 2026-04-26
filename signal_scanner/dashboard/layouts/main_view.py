@@ -138,27 +138,24 @@ def build_main_layout() -> html.Div:
                             dbc.Nav(
                                 [
                                     dbc.NavLink(
-                                        [html.I(className="fas fa-crosshairs me-1"), "Swing Snipers"],
+                                        [html.I(className="fas fa-calendar-week me-1"), "Swing (Multi-Day)"],
                                         id="nav-sniper-board",
                                         href="#", active=True,
                                     ),
                                     dbc.NavLink(
-                                        [html.I(className="fas fa-bolt me-1"), "Intraday ML"],
-                                        id="nav-intraday-ml",
-                                        href="#",
-                                    ),
-                                    dbc.NavLink(
-                                        [html.I(className="fas fa-bullseye me-1"), "Snipers"],
+                                        [html.I(className="fas fa-bolt me-1"), "Intraday"],
                                         id="nav-intraday-sniper",
                                         href="#",
                                     ),
+                                    # Hidden alias kept so legacy callbacks targeting nav-intraday-ml don't break.
+                                    dbc.NavLink(id="nav-intraday-ml", href="#", style={"display": "none"}),
                                     dbc.NavLink(
                                         [html.I(className="fas fa-layer-group me-1"), "Options"],
                                         id="nav-options",
                                         href="#",
                                     ),
                                     dbc.NavLink(
-                                        [html.I(className="fas fa-crystal-ball me-1"), "Predictive AI"],
+                                        [html.I(className="fas fa-chart-area me-1"), "Forecast"],
                                         id="nav-predictive",
                                         href="#",
                                         disabled=True,
