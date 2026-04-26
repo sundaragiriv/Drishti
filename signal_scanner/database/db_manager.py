@@ -108,6 +108,11 @@ class DatabaseManager:
             "trail_activated": "INTEGER DEFAULT 0",
             # Idea linkage (added Mar 17 2026)
             "idea_id": "INTEGER",
+            # Catalyst-check A/B experiment (added 2026-04-26)
+            "cohort": "TEXT",                  # 'A' = control, 'B' = treatment
+            "catalyst_check_at": "TEXT",       # ISO timestamp of check
+            "catalyst_flag": "INTEGER",        # 0 = clean, 1 = flagged
+            "catalyst_reasons": "TEXT",        # semi-colon-joined reasons
         }
         for column, definition in additions.items():
             if column not in existing:
@@ -378,7 +383,13 @@ class DatabaseManager:
     # ------------------------------------------------------------------
 
     def create_paper_trade(self, data: Dict[str, Any]) -> int:
-        """Create a new OPEN paper trade and return its ID."""
+        """Create a new OPEN paper trade and return its ID.
+
+        Optional fields not in the INSERT below are set via UPDATE after
+        insert — keeps the INSERT statement stable while letting newer
+        columns (cohort, catalyst_*, strategy_type, etc.) flow in.
+        """
+        # Required columns the SQL inserts directly
         sql = """
             INSERT INTO paper_trades
                 (opened_at, symbol, side, entry_price, quantity, notional,
@@ -397,7 +408,22 @@ class DatabaseManager:
         """
         with self._get_connection() as conn:
             cursor = conn.execute(sql, data)
-            return int(cursor.lastrowid)
+            trade_id = int(cursor.lastrowid)
+            # Optional columns added later — only update if present in data dict.
+            extras = [
+                ("strategy_type",     data.get("strategy_type")),
+                ("execution_mode",    data.get("execution_mode")),
+                ("idea_id",           data.get("idea_id")),
+                ("cohort",            data.get("cohort")),
+                ("catalyst_check_at", data.get("catalyst_check_at")),
+                ("catalyst_flag",     data.get("catalyst_flag")),
+                ("catalyst_reasons",  data.get("catalyst_reasons")),
+            ]
+            for col, val in extras:
+                if val is None:
+                    continue
+                conn.execute(f"UPDATE paper_trades SET {col} = ? WHERE id = ?", (val, trade_id))
+            return trade_id
 
     def close_paper_trade(
         self,

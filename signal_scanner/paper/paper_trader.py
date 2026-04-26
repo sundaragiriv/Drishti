@@ -357,6 +357,14 @@ class PaperTrader:
             "entry_trade_conditions": conditions,
             "fees": float(self._cfg.paper_fee_per_trade),
             "created_ts": now_iso,
+            # Catalyst-check experiment metadata (Tier 1, 2026-04-26)
+            "cohort": idea.get("cohort"),
+            "catalyst_check_at": idea.get("catalyst_check_at"),
+            "catalyst_flag": (
+                1 if idea.get("catalyst_flag") else 0
+                if "catalyst_flag" in idea else None
+            ),
+            "catalyst_reasons": idea.get("catalyst_reasons"),
         }
         trade_id = self._db.create_paper_trade(trade_data)
         logger.info(

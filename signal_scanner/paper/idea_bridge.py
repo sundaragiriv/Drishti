@@ -24,6 +24,9 @@ from signal_scanner.core.telemetry import (
     FUNNEL_ENTERED, FUNNEL_SKIPPED,
 )
 from signal_scanner.institutional_intel.config import safe_duckdb_connect
+from signal_scanner.intelligence.catalyst_checker import (
+    CatalystChecker, assign_cohort,
+)
 
 try:
     from signal_scanner.institutional_intel.intelligence.regime_hmm import (
@@ -241,9 +244,49 @@ class IdeaBridge:
         """Persist idea to ledger and enter trade if possible.
 
         Returns trade_id if entered, None otherwise.
+
+        Also runs the Tier 1 catalyst-check A/B experiment:
+          - Cohort A (~50%): control — enter regardless.
+          - Cohort B (~50%): treatment — block entry if catalyst flagged.
+        Both cohorts persist cohort + catalyst metadata for later analysis.
         """
         # Persist/update idea in ledger
         idea_id = self._idea_ledger.upsert_idea(idea)
+
+        # ---- Catalyst-check A/B experiment ----
+        as_of = datetime.now(NY_TZ).date()
+        symbol = str(idea.get("symbol", "")).upper()
+        cohort = assign_cohort(symbol, as_of)
+        idea["cohort"] = cohort
+        idea["catalyst_check_at"] = datetime.now(timezone.utc).isoformat()
+
+        # Run the catalyst check for both cohorts so the analysis later can
+        # compare "cohort A trades that WOULD have been blocked" vs actual.
+        catalyst_result = None
+        wh = safe_duckdb_connect(read_only=True)
+        if wh:
+            try:
+                catalyst_result = CatalystChecker(wh).check(symbol, as_of)
+                idea["catalyst_flag"] = catalyst_result.flag
+                idea["catalyst_reasons"] = catalyst_result.summary
+            except Exception as e:
+                logger.warning("IdeaBridge: catalyst check failed for {}: {}", symbol, e)
+                idea["catalyst_flag"] = False
+                idea["catalyst_reasons"] = f"check_error:{type(e).__name__}"
+            finally:
+                wh.close()
+        else:
+            idea["catalyst_flag"] = False
+            idea["catalyst_reasons"] = "warehouse_unavailable"
+
+        # Cohort B treatment: block on catalyst.
+        # Cohort A: log but proceed (control).
+        if cohort == "B" and idea.get("catalyst_flag"):
+            logger.info(
+                "IDEA BLOCK [B-treat] {} {}: catalyst={}",
+                symbol, idea.get("source"), idea["catalyst_reasons"][:80],
+            )
+            return None
 
         # Enter trade
         idea["market_regime"] = self._hmm_name or "UNKNOWN"
