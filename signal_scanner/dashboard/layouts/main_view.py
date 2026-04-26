@@ -879,20 +879,33 @@ def _build_live_signals_section():
                 children=[
                     # Header changes dynamically based on which nav tab was clicked
                     html.H2(id="intraday-section-title", children=[
-                        "Intraday ML",
+                        "Intraday",
                         html.Span("LIVE", className="kb-section-badge"),
                     ]),
                     html.P(
                         id="intraday-section-desc",
-                        children="Intraday ML strategies and live model activity",
+                        children="Intraday confluence + ML strategies (15-min cycle)",
                         className="kb-section-desc",
                     ),
                 ],
             ),
-            # Hidden tabs controller — driven by top nav, not visible sub-tabs
+            # Visible sub-tabs — Confluence vs ML.
+            # Backed by the hidden ls-tabs controller below; clicks here
+            # propagate via a callback in callbacks.py.
+            dbc.Tabs(
+                id="intraday-subtabs",
+                active_tab="sub-confluence",
+                className="mb-3",
+                children=[
+                    dbc.Tab(label="Confluence (Sniper)", tab_id="sub-confluence"),
+                    dbc.Tab(label="ML (VWAP_MR / FPB / ORB_V2)", tab_id="sub-ml"),
+                ],
+            ),
+            # Hidden tabs controller — keeps existing show/hide logic working.
+            # Sync-via-callback wires intraday-subtabs -> ls-tabs.value.
             dcc.Tabs(
                 id="ls-tabs",
-                value="tab-intraday-ml",
+                value="tab-intraday-sniper",
                 style={"display": "none"},
                 children=[
                     dcc.Tab(label="Scanner", value="tab-scanner"),

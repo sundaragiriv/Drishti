@@ -8,6 +8,15 @@ For deep technical commits see `git log`. For research artefacts see
 
 ---
 
+## 2026-04-26 (late evening) — Intraday sub-tabs added
+
+- **Intraday section now has visible sub-tabs**: "Confluence (Sniper)"
+  and "ML (VWAP_MR / FPB / ORB_V2)". Clicking either switches the
+  hidden ls-tabs controller behind the scenes — no architecture change,
+  just exposed the existing routing as user-clickable.
+- Section title simplified to "Intraday" with new desc covering both
+  sub-strategies.
+
 ## 2026-04-26 (evening) — Navbar rename + P&L Ledger cleared
 
 - **Navbar renamed** for clarity. "Swing Snipers" / "Snipers" was

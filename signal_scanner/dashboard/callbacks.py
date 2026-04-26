@@ -610,6 +610,21 @@ def register_callbacks(app, db_manager, scanner) -> None:
         return no_update
 
     # ------------------------------------------------------------------
+    # 2b. Intraday sub-tabs (Confluence / ML) -> hidden ls-tabs controller
+    # ------------------------------------------------------------------
+    @app.callback(
+        Output("ls-tabs", "value", allow_duplicate=True),
+        Input("intraday-subtabs", "active_tab"),
+        prevent_initial_call=True,
+    )
+    def sync_intraday_subtabs(active):
+        mapping = {
+            "sub-confluence": "tab-intraday-sniper",
+            "sub-ml":         "tab-intraday-ml",
+        }
+        return mapping.get(active, no_update)
+
+    # ------------------------------------------------------------------
     # 3. Column picker — toggle hidden columns
     # ------------------------------------------------------------------
     @app.callback(
