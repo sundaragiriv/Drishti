@@ -245,24 +245,22 @@ class IdeaBridge:
 
         Returns trade_id if entered, None otherwise.
 
-        Also runs the Tier 1 catalyst-check A/B experiment:
-          - Cohort A (~50%): control — enter regardless.
-          - Cohort B (~50%): treatment — block entry if catalyst flagged.
-        Both cohorts persist cohort + catalyst metadata for later analysis.
+        Catalyst metadata is captured on every entry as diagnostic context,
+        but does NOT block entry. The Tier 1 historical backtest
+        (docs/catalyst_gate_dead_2026-04-26.md) showed that filtering on
+        backward-looking news/8-K signals removes more winners than losers
+        across all populations with statistical power. Cohort tagging and
+        catalyst flag/reason are kept for future re-analysis.
         """
         # Persist/update idea in ledger
         idea_id = self._idea_ledger.upsert_idea(idea)
 
-        # ---- Catalyst-check A/B experiment ----
+        # ---- Catalyst metadata capture (diagnostic only, no blocking) ----
         as_of = datetime.now(NY_TZ).date()
         symbol = str(idea.get("symbol", "")).upper()
-        cohort = assign_cohort(symbol, as_of)
-        idea["cohort"] = cohort
+        idea["cohort"] = assign_cohort(symbol, as_of)
         idea["catalyst_check_at"] = datetime.now(timezone.utc).isoformat()
 
-        # Run the catalyst check for both cohorts so the analysis later can
-        # compare "cohort A trades that WOULD have been blocked" vs actual.
-        catalyst_result = None
         wh = safe_duckdb_connect(read_only=True)
         if wh:
             try:
@@ -278,15 +276,6 @@ class IdeaBridge:
         else:
             idea["catalyst_flag"] = False
             idea["catalyst_reasons"] = "warehouse_unavailable"
-
-        # Cohort B treatment: block on catalyst.
-        # Cohort A: log but proceed (control).
-        if cohort == "B" and idea.get("catalyst_flag"):
-            logger.info(
-                "IDEA BLOCK [B-treat] {} {}: catalyst={}",
-                symbol, idea.get("source"), idea["catalyst_reasons"][:80],
-            )
-            return None
 
         # Enter trade
         idea["market_regime"] = self._hmm_name or "UNKNOWN"
