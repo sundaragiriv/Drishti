@@ -130,6 +130,13 @@ class ScannerConfig:
     # Daily risk kill-switch — block new entries once breached (trips reset at NY midnight)
     paper_daily_max_drawdown_pct: float = 2.0        # % of starting capital; 2% = $20K on $1M
     paper_global_r_cap_pct: float = 8.0              # Max concurrent $-at-risk across open positions
+    # Idea-bridge target multiples (Triple Lock + Swing Ideas).
+    # Was 2.5 — backtested at LIVE config (2*ATR stops) showed 2.5R target hit
+    # only 9% of the time, killing net expectancy after costs (-0.131R/trade).
+    # 1R target hits 38.6% on Triple Lock, net +0.024R/trade (POSITIVE).
+    # See docs/live_config_expectancy_2026-04-25.md for full delta.
+    paper_idea_target_r_multiple: float = 1.0        # primary take-profit (target_1)
+    paper_idea_stretch_target_r_multiple: float = 1.5  # secondary stretch (target_2)
     options_liquidity_enabled: bool = True
     options_min_open_interest: int = 200
     options_min_volume: int = 25

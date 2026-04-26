@@ -46,11 +46,16 @@ class IdeaBridge:
     MAX_IDEAS_PER_CYCLE = 50  # Paper mode — enter all qualifying ideas
     MIN_CONVICTION = 65       # Lower bar to generate more trade data
     STOP_ATR_MULT = 2.0      # Stop = entry - 2x ATR
-    TARGET_RR = 2.5           # Target = entry + (risk * 2.5) — sniper minimum
 
     def __init__(self, paper_trader, db_manager) -> None:
         self._pt = paper_trader
         self._db = db_manager
+        # Pull target multiples from ScannerConfig — set once at construction.
+        # 1R primary / 1.5R stretch picked from rr_analysis_live_config.py
+        # backtest (2026-04-25). Override via cfg if you want to A/B.
+        cfg = paper_trader._cfg
+        self.TARGET_RR = float(getattr(cfg, "paper_idea_target_r_multiple", 1.0))
+        self.STRETCH_RR = float(getattr(cfg, "paper_idea_stretch_target_r_multiple", 1.5))
         self._entered_today: set = set()
         self._last_date: str = ""
         self._hmm: Optional[DailyRegimeHMM] = None
@@ -358,7 +363,7 @@ class IdeaBridge:
                     "entry_price": round(entry, 2),
                     "stop_loss": stop,
                     "target_1": target,
-                    "target_2": round(entry + risk * 3.0, 2) if side == "LONG" else round(entry - risk * 3.0, 2),
+                    "target_2": round(entry + risk * self.STRETCH_RR, 2) if side == "LONG" else round(entry - risk * self.STRETCH_RR, 2),
                     "source": f"SWING_IDEA_{signal}",
                     "conviction": conviction,
                     "accum_phase": r[3],
@@ -419,7 +424,7 @@ class IdeaBridge:
                     "entry_price": round(entry, 2),
                     "stop_loss": stop,
                     "target_1": target,
-                    "target_2": round(entry - risk * 3.0, 2),
+                    "target_2": round(entry - risk * self.STRETCH_RR, 2),
                     "source": "SWING_IDEA_SHORT_DIST",
                     "conviction": short_conv,
                     "accum_phase": r[2],
@@ -483,7 +488,7 @@ class IdeaBridge:
                     "entry_price": round(entry, 2),
                     "stop_loss": stop,
                     "target_1": target,
-                    "target_2": round(entry + risk * 3.0, 2),
+                    "target_2": round(entry + risk * self.STRETCH_RR, 2),
                     "source": "AI_TRIPLE_LOCK",
                     "conviction": float(r[1]),
                     "accum_phase": r[2],
