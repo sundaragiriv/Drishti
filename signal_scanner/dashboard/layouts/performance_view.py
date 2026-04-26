@@ -5,7 +5,10 @@ Sub-tabs:
   - Closed Trades: full journal with entry/exit, P&L, regime, source
   - Analytics: win rate, expectancy, profit factor, Sharpe (filterable)
   - Manual Trades: real trade entry + tracking (from My Trades)
+  - Release Notes: chronological log of system changes (docs/RELEASE_NOTES.md)
 """
+
+from pathlib import Path
 
 import dash_bootstrap_components as dbc
 from dash import dash_table, dcc, html
@@ -15,6 +18,18 @@ from signal_scanner.dashboard.layouts.main_view import TABLE_HEADER_STYLE, TABLE
 from signal_scanner.dashboard.layouts.my_trades_view import build_my_trades_layout
 
 cfg = DashboardConfig()
+
+_RELEASE_NOTES_PATH = Path(__file__).resolve().parents[3] / "docs" / "RELEASE_NOTES.md"
+
+
+def _load_release_notes() -> str:
+    """Load docs/RELEASE_NOTES.md. Returns a friendly fallback if missing."""
+    try:
+        return _RELEASE_NOTES_PATH.read_text(encoding="utf-8")
+    except FileNotFoundError:
+        return "# Release Notes\n\n_No `docs/RELEASE_NOTES.md` file found._"
+    except Exception as e:
+        return f"# Release Notes\n\n_Failed to read RELEASE_NOTES.md: {e}_"
 
 
 def build_performance_layout() -> html.Div:
@@ -61,7 +76,7 @@ def build_performance_layout() -> html.Div:
                 ],
             ),
 
-            # Sub-tabs: Open | Closed | Analytics | Manual Trades
+            # Sub-tabs: Open | Closed | Analytics | Manual Trades | Release Notes
             dbc.Tabs(
                 id="performance-subtabs",
                 active_tab="perf-open-tab",
@@ -71,6 +86,7 @@ def build_performance_layout() -> html.Div:
                     dbc.Tab(label="Closed Trades", tab_id="perf-closed-tab"),
                     dbc.Tab(label="Analytics", tab_id="perf-analytics-tab"),
                     dbc.Tab(label="Manual Trades", tab_id="perf-manual-tab"),
+                    dbc.Tab(label="Release Notes", tab_id="perf-releases-tab"),
                 ],
             ),
 
@@ -323,6 +339,21 @@ def build_performance_layout() -> html.Div:
                     # Use the children from build_my_trades_layout() directly (without
                     # the outer my-trades-section wrapper which is reserved for legacy nav)
                     children=build_my_trades_layout().children,
+                ),
+
+                # Release notes — markdown rendered from docs/RELEASE_NOTES.md
+                html.Div(
+                    id="perf-releases-content",
+                    hidden=True,
+                    className="kb-card",
+                    style={"padding": "20px", "maxHeight": "70vh", "overflowY": "auto"},
+                    children=[
+                        dcc.Markdown(
+                            id="perf-releases-md",
+                            children=_load_release_notes(),
+                            style={"fontSize": "0.92rem", "lineHeight": "1.55"},
+                        ),
+                    ],
                 ),
             ]),
         ],

@@ -586,17 +586,20 @@ def register_sniper_callbacks(app, db_manager, scanner=None) -> None:
         Output("perf-closed-content", "hidden"),
         Output("perf-analytics-content", "hidden"),
         Output("perf-manual-content", "hidden"),
+        Output("perf-releases-content", "hidden"),
         Input("performance-subtabs", "active_tab"),
         prevent_initial_call=False,
     )
     def switch_performance_subtab(active_tab):
+        # (open, closed, analytics, manual, releases)
         tab_map = {
-            "perf-open-tab": (False, True, True, True),
-            "perf-closed-tab": (True, False, True, True),
-            "perf-analytics-tab": (True, True, False, True),
-            "perf-manual-tab": (True, True, True, False),
+            "perf-open-tab":      (False, True,  True,  True,  True),
+            "perf-closed-tab":    (True,  False, True,  True,  True),
+            "perf-analytics-tab": (True,  True,  False, True,  True),
+            "perf-manual-tab":    (True,  True,  True,  False, True),
+            "perf-releases-tab":  (True,  True,  True,  True,  False),
         }
-        return tab_map.get(active_tab, (False, True, True, True))
+        return tab_map.get(active_tab, (False, True, True, True, True))
 
     # ------------------------------------------------------------------
     # 7. PERFORMANCE — load open + closed trades, KPIs
