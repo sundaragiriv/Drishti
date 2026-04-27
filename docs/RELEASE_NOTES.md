@@ -8,6 +8,32 @@ For deep technical commits see `git log`. For research artefacts see
 
 ---
 
+## 2026-04-27 (mid-day) — Objective question + Top 10 hero panel
+
+- **Dashboard now answers ONE question prominently:** "What stocks will
+  make me money today?" Replaces "Swing Snipers / EV-ranked trade ideas"
+  technical title with the user-perspective question that everything in
+  the system is built to answer.
+- **Today's Top 10 hero panel** added above the full ranked table.
+  Shows the actionable shortlist with side / R:R / conviction / status.
+  When no qualifying setups exist, the summary says **"Sit out — no
+  qualifying setups today"** — that's a valid and honest answer.
+- Also saved the objective question to memory as a project rule so
+  future features are evaluated against it.
+
+## 2026-04-27 (mid-day) — Restored main scan loops (CRITICAL FIX)
+
+- **Bug discovered:** `run_execution_scan` and `run_research_scan` were
+  defined in `main.py` but **never registered with the scheduler**.
+  IdeaBridge had been silently broken for weeks — Triple Lock / Swing /
+  PEAD never fired any trades because no scan was calling
+  `multi_symbol_scanner.scan_symbols()`.
+- **Fix:** Both scans now scheduled on 900s interval. Initial scan
+  fires at startup so we don't wait 15 min for first cycle.
+- Dashboard appeared empty pre-bounce because the data was correct but
+  no entries were being made. Confirmed by user pushback ("i cant see
+  anything yet, pretty empty").
+
 ## 2026-04-27 (pre-market) — F1-A + F2 honest result, Monday-ready
 
 - **F1-A: v3 retrained on `label_hit_1R_5d`** (5-day window, same R-frame).

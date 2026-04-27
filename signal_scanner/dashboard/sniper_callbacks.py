@@ -178,6 +178,8 @@ def register_sniper_callbacks(app, db_manager, scanner=None) -> None:
         Output("sniper-avg-rr", "children"),
         Output("sniper-regime", "children"),
         Output("sniper-regime", "style"),
+        Output("sniper-top10-table", "data"),
+        Output("sniper-top10-summary", "children"),
         Input("sniper-refresh-interval", "n_intervals"),
         Input("sniper-regime-toggle", "value"),
         Input("sniper-side-filter", "value"),
@@ -187,7 +189,7 @@ def register_sniper_callbacks(app, db_manager, scanner=None) -> None:
     def update_sniper_board(_n, regime_aligned, side_filter, source_filter):
         conn = safe_duckdb_connect(read_only=True)
         if conn is None:
-            return [], "0", "0", "0", "0", "0.0", "---", {"color": "#888"}
+            return [], "0", "0", "0", "0", "0.0", "---", {"color": "#888"}, [], "Sit out — no qualifying setups"
 
         try:
             ideas = _load_sniper_ideas(conn)
@@ -203,7 +205,7 @@ def register_sniper_callbacks(app, db_manager, scanner=None) -> None:
             conn.close()
 
         if not ideas:
-            return [], "0", "0", "0", "0", "0.0", "---", {"color": "#888"}
+            return [], "0", "0", "0", "0", "0.0", "---", {"color": "#888"}, [], "Sit out — no qualifying setups"
 
         # Get current regime for badge
         regime_state = None
@@ -274,8 +276,21 @@ def register_sniper_callbacks(app, db_manager, scanner=None) -> None:
         for rank, idea in enumerate(filtered, 1):
             idea["rank"] = rank
 
+        # Top 10 = first 10 of `filtered` (already smart-sorted above).
+        top10 = filtered[:10]
+        if top10:
+            n_long_top10 = sum(1 for i in top10 if i.get("side") == "LONG")
+            n_short_top10 = sum(1 for i in top10 if i.get("side") == "SHORT")
+            top10_summary = (
+                f"{len(top10)} setup(s) • {n_long_top10} long / {n_short_top10} short"
+                f" • avg R:R {avg_rr}"
+            )
+        else:
+            top10_summary = "Sit out — no qualifying setups today"
+
         return (filtered, str(n_total), str(n_long), str(n_short),
-                str(n_triple), avg_rr, regime_text, regime_style)
+                str(n_triple), avg_rr, regime_text, regime_style,
+                top10, top10_summary)
 
     # ------------------------------------------------------------------
     # 4. SNIPER BOARD — row click → detail panel

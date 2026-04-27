@@ -55,15 +55,16 @@ def build_sniper_board_layout() -> html.Div:
                        "justifyContent": "space-between"},
                 children=[
                     html.Div([
+                        # Objective question — the one thing this dashboard exists to answer.
+                        # Stays as the page H2 so the user sees it the moment they land.
                         html.H2([
-                            "Swing Snipers",
-                            html.Span("PRECISION", className="kb-section-badge"),
-                        ]),
+                            "What stocks will make me money today?",
+                        ], style={"fontWeight": "700", "marginBottom": "4px"}),
                         html.Div(
                             style={"display": "flex", "gap": "16px", "alignItems": "center"},
                             children=[
                                 html.P(
-                                    "EV-ranked trade ideas — only setups with calibrated edge",
+                                    "Top setups, EV-ranked, after costs. Empty answer = sit out.",
                                     className="kb-section-desc",
                                     style={"margin": "0"},
                                 ),
@@ -179,6 +180,70 @@ def build_sniper_board_layout() -> html.Div:
                 id="sniper-refresh-interval",
                 interval=60 * 1000,  # refresh every 60s
                 n_intervals=0,
+            ),
+
+            # ---- THE ANSWER — top 10 setups, the actionable list ----
+            html.Div(
+                className="kb-card",
+                style={"marginBottom": "16px",
+                       "border": "1px solid rgba(212, 160, 23, 0.4)",
+                       "background": "linear-gradient(180deg, rgba(212,160,23,0.06) 0%, rgba(212,160,23,0.0) 100%)"},
+                children=[
+                    html.Div(
+                        style={"display": "flex", "alignItems": "center",
+                               "gap": "10px", "marginBottom": "8px",
+                               "padding": "0 4px"},
+                        children=[
+                            html.I(className="fas fa-bullseye",
+                                   style={"color": "#D4A017", "fontSize": "14px"}),
+                            html.Span("TODAY'S TOP 10",
+                                      style={"fontWeight": "700",
+                                             "letterSpacing": "0.08em",
+                                             "fontSize": "0.78rem",
+                                             "color": "#D4A017"}),
+                            html.Span(id="sniper-top10-summary",
+                                      style={"fontSize": "0.78rem",
+                                             "color": "rgba(255,255,255,0.65)",
+                                             "marginLeft": "auto"}),
+                        ],
+                    ),
+                    dash_table.DataTable(
+                        id="sniper-top10-table",
+                        columns=[
+                            {"name": "#",       "id": "rank",       "type": "numeric"},
+                            {"name": "Symbol",  "id": "symbol"},
+                            {"name": "Side",    "id": "side"},
+                            {"name": "Now",     "id": "current_price",
+                             "type": "numeric",
+                             "format": dash_table.FormatTemplate.money(2)},
+                            {"name": "Stop",    "id": "stop_price",
+                             "type": "numeric",
+                             "format": dash_table.FormatTemplate.money(2)},
+                            {"name": "T1",      "id": "target_1",
+                             "type": "numeric",
+                             "format": dash_table.FormatTemplate.money(2)},
+                            {"name": "R:R",     "id": "rr_ratio",   "type": "numeric"},
+                            {"name": "Conv",    "id": "_conviction","type": "numeric"},
+                            {"name": "Source",  "id": "source_badge"},
+                            {"name": "Status",  "id": "daily_status"},
+                        ],
+                        data=[],
+                        page_size=10,
+                        sort_action="none",
+                        row_selectable=False,
+                        style_table={"overflowX": "auto"},
+                        style_header=TABLE_HEADER_STYLE,
+                        style_cell=TABLE_CELL_STYLE,
+                        style_data_conditional=[
+                            {"if": {"column_id": "symbol"},
+                             "color": "#4da3ff", "fontWeight": "700"},
+                            {"if": {"filter_query": "{side} = 'LONG'", "column_id": "side"},
+                             "color": cfg.accent_long, "fontWeight": "600"},
+                            {"if": {"filter_query": "{side} = 'SHORT'", "column_id": "side"},
+                             "color": cfg.accent_short, "fontWeight": "600"},
+                        ],
+                    ),
+                ],
             ),
 
             # Main sniper table
