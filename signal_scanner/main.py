@@ -462,6 +462,40 @@ def main() -> None:
         misfire_grace_time=15,
     )
 
+    # Main scan loops — execution (market hours) + research (pre/post market).
+    # Both call scanner.scan_symbols/scan_watchlist which drives IdeaBridge.
+    # Without these, IdeaBridge never fires and no idea-based trades enter.
+    # (Restored 2026-04-27 — discovered the chain was orphaned.)
+    scheduler.add_job(
+        run_execution_scan,
+        trigger="interval",
+        seconds=scan_interval,
+        id="execution_scan",
+        name="Execution Scan (market hours)",
+        max_instances=1,
+        coalesce=True,
+        misfire_grace_time=60,
+    )
+    scheduler.add_job(
+        run_research_scan,
+        trigger="interval",
+        seconds=scan_interval,
+        id="research_scan",
+        name="Research Scan (pre/post market)",
+        max_instances=1,
+        coalesce=True,
+        misfire_grace_time=60,
+    )
+    # Fire one immediately so we don't have to wait scan_interval at startup.
+    scheduler.add_job(
+        run_execution_scan,
+        trigger="date",
+        run_date=datetime.now(timezone.utc),
+        id="execution_scan_initial",
+        name="Initial Execution Scan",
+        misfire_grace_time=120,
+    )
+
     # Session heartbeat — updates last_heartbeat so stale detection works
     def _session_heartbeat() -> None:
         session.heartbeat()
