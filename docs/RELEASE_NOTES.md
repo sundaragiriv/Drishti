@@ -8,6 +8,27 @@ For deep technical commits see `git log`. For research artefacts see
 
 ---
 
+## 2026-04-27 (pre-market) — F1-A + F2 honest result, Monday-ready
+
+- **F1-A: v3 retrained on `label_hit_1R_5d`** (5-day window, same R-frame).
+  Honest purged 5-fold CV mean AUC: **0.5510 ±0.0044** (n=1.7M).
+  Folds: 0.546 / 0.546 / 0.554 / 0.557 / 0.553.
+  Compared to F1's label_hit_1R_10d (AUC 0.513): **+0.038 lift**.
+  This is the right label for our actual 5-day-max-hold production frame.
+  See `docs/f1a_v3_retrain_5d_2026-04-27.md`.
+- **F2: Isotonic calibration applied** to v3_1R_5d. Calibrator saved
+  alongside the model in `data/models/flow_predictor_v3_1R_5d.pkl`.
+  Finding: v3_5d has **rank-skill but its probabilities cluster around
+  the base rate (0.22)**. Top decile ≈ 30% hit, bottom decile ≈ 15%.
+  Useful as a ranker, not as a confidence gauge.
+- **Live v3_5d ranking deferred.** Integrating into IdeaBridge requires
+  a runtime feature pipeline (mirror of `_build_features_v2.py` over
+  live DuckDB+SQLite state) — 1-2 day project. Model artifact + calibrator
+  saved for that integration next session.
+- **Pre-market data refresh running in background** — EOD pipeline to
+  catch weekend Form 4 / 8-K filings + refit HMM with Friday's data.
+- **Dashboard bounced** for Monday open at http://127.0.0.1:8050.
+
 ## 2026-04-26 (late) — PEAD strategy live + probability calibration ready
 
 - **PEAD (Post-Earnings Announcement Drift) strategy shipped** as a
