@@ -8,6 +8,23 @@ For deep technical commits see `git log`. For research artefacts see
 
 ---
 
+## 2026-04-26 (late) — PEAD strategy live + probability calibration ready
+
+- **PEAD (Post-Earnings Announcement Drift) strategy shipped** as a
+  new IdeaBridge source. When an 8-K with `has_earnings=True` lands on
+  a name in our accumulation universe AND the stock gapped >=3% on
+  filing day, we trade the drift over 10 days at the 1R/2*ATR frame.
+  Source tag: `PEAD_DRIFT_LONG` / `PEAD_DRIFT_SHORT`.
+  Academic foundation: Bernard-Thomas 1989, 50+ years of replication.
+  Caveat: our 8-K table only goes back 2026-01-08 so historical backtest
+  impossible until SEC EDGAR bulk-backfill — paper-trade-and-measure mode.
+- **Isotonic probability calibration** module added
+  (`probability_calibration.py`). Wraps sklearn `IsotonicRegression`
+  with sample-size guards + a calibration-report helper. Will be
+  applied to v3 outputs once F1 retraining completes.
+- **F1 (v3 retrain on `label_hit_1R_10d`) running in background**
+  — will follow with its own release note + report.
+
 ## 2026-04-26 (late evening) — Intraday sub-tabs added
 
 - **Intraday section now has visible sub-tabs**: "Confluence (Sniper)"
