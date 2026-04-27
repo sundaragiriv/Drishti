@@ -98,6 +98,16 @@ def parse_args() -> argparse.Namespace:
             "(e.g., VWAP_MR or VWAP_MR,SCANNER_MTF). Default: empty = all SIM."
         ),
     )
+    parser.add_argument(
+        "--ignore-orphans",
+        action="store_true",
+        help=(
+            "Auto-acknowledge any orphan IBKR positions detected at startup "
+            "reconciliation. Use when starting fresh after clearing "
+            "paper_trades but stale IBKR positions remain. Equivalent to "
+            "calling executor.acknowledge_orphans() after reconcile."
+        ),
+    )
 
     # Price loader integration (runs within same process to avoid DuckDB lock)
     parser.add_argument(
@@ -1168,6 +1178,18 @@ def main() -> None:
                 try:
                     stats = order_executor.reconcile_on_startup()
                     logger.info(f"IBKR startup reconciliation: {stats}")
+                    # If user passed --ignore-orphans, auto-acknowledge any
+                    # orphan positions so the entry gate clears immediately.
+                    # Use case: starting fresh after clearing paper_trades but
+                    # stale IBKR paper positions remain.
+                    if getattr(args, "ignore_orphans", False) and order_executor._orphan_gate_active:
+                        logger.warning(
+                            "ORPHAN AUTO-ACKNOWLEDGE (--ignore-orphans): "
+                            "{} orphan(s) ignored: {}",
+                            len(order_executor._orphan_symbols),
+                            ", ".join(order_executor._orphan_symbols),
+                        )
+                        order_executor.acknowledge_orphans()
                     # Propagate orphan gate to readiness
                     readiness.orphan_gate_active = order_executor._orphan_gate_active
                     readiness.orphan_symbols = list(order_executor._orphan_symbols)
