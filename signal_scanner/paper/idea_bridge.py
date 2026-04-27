@@ -27,6 +27,7 @@ from signal_scanner.institutional_intel.config import safe_duckdb_connect
 from signal_scanner.intelligence.catalyst_checker import (
     CatalystChecker, assign_cohort,
 )
+from signal_scanner.intelligence.pead_strategy import PEADStrategy
 
 try:
     from signal_scanner.institutional_intel.intelligence.regime_hmm import (
@@ -236,9 +237,63 @@ class IdeaBridge:
         except Exception as e:
             logger.error("IdeaBridge AI Triple Lock error: {}", e)
 
+        # 4. PEAD — Post-Earnings Announcement Drift
+        try:
+            pead_ideas = self._get_pead_ideas(open_symbols)
+            _pead_sub = "idea_pead"
+            record_funnel(_pead_sub, FUNNEL_CANDIDATES, len(pead_ideas))
+            for idea in pead_ideas:
+                if entered >= self.MAX_IDEAS_PER_CYCLE:
+                    break
+                if idea["symbol"] in self._entered_today:
+                    record_funnel(_pead_sub, FUNNEL_SKIPPED)
+                    continue
+                if not self._regime_allows_side(idea["side"]):
+                    record_funnel(_pead_sub, FUNNEL_SKIPPED)
+                    self._idea_ledger.upsert_idea(idea)
+                    continue
+                record_funnel(_pead_sub, FUNNEL_SETUPS)
+                record_funnel(_pead_sub, FUNNEL_ATTEMPTED)
+                trade_id = self._persist_and_enter(idea, open_symbols)
+                if trade_id:
+                    record_funnel(_pead_sub, FUNNEL_ENTERED)
+                    entered += 1
+                else:
+                    self._idea_ledger.upsert_idea(idea)
+                    record_funnel(_pead_sub, FUNNEL_SKIPPED)
+        except Exception as e:
+            logger.error("IdeaBridge PEAD error: {}", e)
+
         if entered > 0:
             logger.info("IdeaBridge: entered {} idea trades this cycle", entered)
         return entered
+
+    def _get_pead_ideas(self, open_symbols: set) -> List[Dict]:
+        """Fetch PEAD candidates and convert to idea dicts.
+
+        Filters out tickers already in open positions or entered today.
+        Layers on top of accumulation universe (handled inside PEADStrategy
+        via JOIN to intelligence_scores).
+        """
+        from datetime import datetime as _dt
+        wh = safe_duckdb_connect(read_only=True)
+        if not wh:
+            return []
+        try:
+            strat = PEADStrategy(wh)
+            candidates = strat.get_candidates(as_of=_dt.now(NY_TZ).date())
+        finally:
+            wh.close()
+        ideas: List[Dict] = []
+        for c in candidates:
+            if c.ticker in open_symbols or c.ticker in self._entered_today:
+                continue
+            ideas.append(PEADStrategy.to_idea_dict(
+                c,
+                target_r=self.TARGET_RR,
+                stretch_r=self.STRETCH_RR,
+            ))
+        return ideas
 
     def _persist_and_enter(self, idea: Dict, open_symbols: set) -> Optional[int]:
         """Persist idea to ledger and enter trade if possible.
