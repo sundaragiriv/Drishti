@@ -8,6 +8,26 @@ For deep technical commits see `git log`. For research artefacts see
 
 ---
 
+## 2026-04-27 (night) — F1-B: structural features (YZ + Hurst) ship modest lift
+
+- **YZ + Hurst features added** to v3_5d. Honest purged 5-fold CV mean
+  AUC: **0.5563 ±0.0024** vs F1-A baseline 0.5510 ±0.0044.
+  +0.005 AUC improvement, std cut nearly in half.
+- **yz_overnight_share at rank #5 in feature importance** — gap-risk
+  awareness is a genuinely productive feature for our 5-day swing target.
+  Hypothesis confirmed.
+- All 7 structural features in top-20 importance. yz_vs_atr_ratio_14
+  at #8 (validates the orthogonality test).
+- **Lyapunov + Rough Vol explicitly REJECTED** (final, not deferred).
+  YZ + Hurst = our structural feature set going forward.
+- Decision rule mislabeled "SHELVE" — base-rate shift between train pool
+  (21% hit) and 90-day holdout (9.5% hit) invalidated the Brier
+  comparison. Real verdict: WASH-leaning-POSITIVE. See
+  `docs/structural_features_eval_2026-04-28.md`.
+- Live deployment still deferred (needs runtime feature pipeline).
+- Memory: added `feedback_research_script_guards.md` after a smoke-test
+  import side-effect crashed the EOD pipeline's Massive Enrichment step.
+
 ## 2026-04-27 (mid-day) — Objective question + Top 10 hero panel
 
 - **Dashboard now answers ONE question prominently:** "What stocks will

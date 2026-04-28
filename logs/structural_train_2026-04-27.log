@@ -1,0 +1,101 @@
+======================================================================
+F1-B: Train v3_5d with Yang-Zhang + Hurst structural features
+======================================================================
+
+Loading v2 features...
+  1,737,655 rows, 2,938 tickers, 2019-06-13 -> 2026-02-06
+
+Loading OHLC + ATR for YZ + Hurst computation...
+  OHLC bars loaded: 4,903,167
+
+Computing label_hit_1R_5d...
+
+Computing YZ + Hurst per ticker (this is the long step)...
+  YZ+Hurst rows: 4,903,167
+
+Merging structural features into base v2 set...
+  After label merge: 1,722,846
+
+Engineering features (v3 base + structural)...
+  After feature dropna: 1,694,583 rows; 66 features (7 structural)
+
+Locked holdout: 2025-11-01 to 2026-01-30 (90 days)
+  Train pool: 1,694,488  Holdout: 95
+  Train hit rate: 21.2%  Holdout hit rate: 9.5%
+
+============================================================
+PURGED 5-FOLD CV (horizon=5d, embargo=5d) on training pool
+============================================================
+  fold 1: train=1,353,040  test=338,898  AUC=0.5571
+  fold 2: train=1,348,002  test=338,898  AUC=0.5569
+  fold 3: train=1,344,877  test=338,898  AUC=0.5516
+  fold 4: train=1,343,804  test=338,897  AUC=0.5574
+  fold 5: train=1,349,194  test=338,897  AUC=0.5584
+
+  Purged mean AUC = 0.5563  +/-0.0024
+  vs F1-A baseline (no structural features): 0.5510 +/-0.0044
+  Delta from baseline:           +0.0053
+
+Training final model on full training pool...
+
+============================================================
+LOCKED HOLDOUT — single evaluation
+============================================================
+  Holdout AUC:    0.6641
+  Holdout Brier:  0.1662
+
+  Calibration buckets (predicted-prob deciles vs actual hit rate):
+           Range       N    Pred  Actual     Err
+  --------------------------------------------------
+  0.084-0.143        3  0.121  0.000 +0.121
+  0.143-0.203       11  0.180  0.091 +0.089
+  0.203-0.262       17  0.238  0.059 +0.179
+  0.262-0.321        7  0.288  0.000 +0.288
+  0.321-0.381       12  0.350  0.000 +0.350
+  0.381-0.440       11  0.409  0.091 +0.318
+  0.440-0.499       16  0.477  0.250 +0.227
+  0.499-0.559       10  0.533  0.000 +0.533
+  0.559-0.618        5  0.591  0.200 +0.391
+  0.618-0.677        3  0.669  0.333 +0.336
+
+  Stratified AUC by yz_vol_14d quintile (low vol -> high vol):
+    Quintile       N     AUC    Hit%
+
+  Feature importance (LightGBM gain — SHAP unavailable in this env):
+  Top 20:
+    1. atr_short_vs_long                       660760  
+    2. atr_compression                         656979  
+    3. rel_strength_5d                         486437  
+    4. conviction_score                        479877  
+    5. yz_overnight_share                      364740  STRUCTURAL
+    6. ml_score                                362209  
+    7. pct_from_sma50                          318802  
+    8. yz_vs_atr_ratio_14                      282208  STRUCTURAL
+    9. ret_20d_back                            270333  
+   10. vol_ratio_10d                           257878  
+   11. hurst_252d                              244754  STRUCTURAL
+   12. atr14_pct                               233126  
+   13. yz_vol_14d                              228505  STRUCTURAL
+   14. price_mom_90d                           223649  
+   15. pct_from_sma200                         217663  
+   16. hurst_64d                               213022  STRUCTURAL
+   17. vol_trend_10_50                         202446  
+   18. yz_vol_5d                               202281  STRUCTURAL
+   19. range_pos_52w                           200390  
+   20. ret_10d_back                            196087  
+
+  Structural features in TOP 10: 2 of 7
+  yz_overnight_share rank: 5
+
+============================================================
+DECISION
+============================================================
+  Holdout AUC:           0.6641  (ship>0.575)
+  Brier score:           0.1662  (baseline 0.1659; improves=False)
+  yz_overnight in top10: True  (rank=5)
+  --> DECISION: SHELVE
+
+  Saved: data/models/flow_predictor_v3_structural.pkl
+  Metrics: data/models/flow_predictor_v3_structural_metrics.json
+
+Done in 2487.0s
