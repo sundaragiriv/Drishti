@@ -16,6 +16,7 @@ from dash import dash_table, dcc, html
 from signal_scanner.config import DashboardConfig
 from signal_scanner.dashboard.layouts.main_view import TABLE_HEADER_STYLE, TABLE_CELL_STYLE
 from signal_scanner.dashboard.layouts.my_trades_view import build_my_trades_layout
+from signal_scanner.dashboard.trade_rules import rules_tooltip
 
 cfg = DashboardConfig()
 
@@ -46,6 +47,7 @@ def build_performance_layout() -> html.Div:
                     html.H2([
                         "P&L Ledger",
                         html.Span("ALL TRADES", className="kb-section-badge"),
+                        rules_tooltip("performance"),
                     ]),
                     html.P(
                         "One truth for all trade outcomes — paper, manual, and automated",

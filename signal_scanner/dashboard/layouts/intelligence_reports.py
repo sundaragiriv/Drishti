@@ -17,6 +17,7 @@ import dash_bootstrap_components as dbc
 from dash import dash_table, dcc, html
 
 from signal_scanner.config import DashboardConfig
+from signal_scanner.dashboard.trade_rules import rules_tooltip
 
 cfg = DashboardConfig()
 
@@ -40,7 +41,7 @@ def build_intelligence_layout() -> html.Div:
             html.Div(
                 className="kb-section-header",
                 children=[
-                    html.H2("Intelligence Layer",
+                    html.H2(["Intelligence Layer", rules_tooltip("intelligence")],
                              style={"color": "#fff", "fontWeight": "700"}),
                     html.P("Decision support, evidence, and market context",
                            style=_DESC),

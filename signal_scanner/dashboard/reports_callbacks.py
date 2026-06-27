@@ -487,6 +487,20 @@ def register_reports_callbacks(app, db_manager, scanner=None, live_scanners=None
             from signal_scanner.core.live_bar_store import LiveBarStore
             store = LiveBarStore()
             ideas = get_intraday_ideas(db_manager, store)
+            # Rule-match highlight — flag ideas that pass the page's trade rules
+            try:
+                from signal_scanner.dashboard.trade_rules import rule_match_mark
+                from signal_scanner.institutional_intel.intelligence.regime_hmm import DailyRegimeHMM
+                regime_state = None
+                hmm = DailyRegimeHMM()
+                hmm.load()
+                if hmm._model is not None:
+                    regime_state, _p, _name = hmm.current_regime()
+                for idea in ideas:
+                    idea["rule_match"] = rule_match_mark("intraday", idea, regime_state)
+            except Exception:
+                for idea in ideas:
+                    idea.setdefault("rule_match", "")
             return ideas
         except Exception as e:
             logger.debug("Intraday ideas error: %s", e)

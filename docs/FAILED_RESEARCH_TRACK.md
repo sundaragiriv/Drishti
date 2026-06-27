@@ -46,7 +46,6 @@ and be right 75% of the time on those few.
 
 This is the same pattern that works for VWAP_MR P99 (72% on 321 trades
 out of 36,000 evaluated). The model scores everything broadly, then an
-extreme selectivity gate filters to only the highest-conviction picks.
 
 ```
 Broad universe (3,000 stocks)

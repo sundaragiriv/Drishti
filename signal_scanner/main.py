@@ -209,7 +209,15 @@ def main() -> None:
         sys.exit(2)
 
     # ---- Data freshness gate ----
-    # Re-check live (premarket result may be stale if scanner restarts mid-day)
+    # Re-check live (premarket result may be stale if scanner restarts mid-day).
+    # Drop the persisted DATA_STALE / ORPHAN_GATE entries first so they only
+    # remain if the live check still finds them — otherwise an earlier-today
+    # snapshot would echo "DEGRADED" forever even after the EOD refresh fixed it.
+    readiness.degraded_reasons = [
+        r for r in readiness.degraded_reasons
+        if not (r.startswith("DATA_STALE") or r.startswith("ORPHAN_GATE"))
+    ]
+    readiness.resolve_status()
     freshness = _check_data_freshness()
     price_ok, age_days, latest_str = compute_price_freshness()
     readiness.prices_age_days = age_days
@@ -230,6 +238,14 @@ def main() -> None:
         )
         logger.error("=" * 60)
     _data_degraded = not freshness["ok"]
+    # Persist the live readiness snapshot immediately so the dashboard pills,
+    # MCP readiness tool, and external observers see today's truth — not a
+    # stale snapshot from the prior scanner run.
+    try:
+        readiness.resolve_status()
+        readiness.save()
+    except Exception as e:
+        logger.warning("Could not persist readiness.json: {}", e)
     reset_session_counters()  # fresh session
     reset_funnel()
 
@@ -1314,6 +1330,10 @@ def main() -> None:
         # Register Sniper Board + Performance + Global Search callbacks
         from signal_scanner.dashboard.sniper_callbacks import register_sniper_callbacks
         register_sniper_callbacks(app, db, scanner=scanner)
+
+        # Register Forecast tab callbacks (HMM + ml_signal_v2 + Triple Lock)
+        from signal_scanner.dashboard.forecast_callbacks import register_forecast_callbacks
+        register_forecast_callbacks(app)
 
         dash_cfg = DashboardConfig()
         port = args.port or dash_cfg.port

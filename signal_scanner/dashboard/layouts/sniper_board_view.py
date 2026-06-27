@@ -10,6 +10,7 @@ from dash import dash_table, dcc, html
 
 from signal_scanner.config import DashboardConfig
 from signal_scanner.dashboard.layouts.main_view import TABLE_HEADER_STYLE, TABLE_CELL_STYLE
+from signal_scanner.dashboard.trade_rules import rules_tooltip
 
 cfg = DashboardConfig()
 
@@ -18,12 +19,14 @@ cfg = DashboardConfig()
 # ---------------------------------------------------------------------------
 SNIPER_COLUMNS = [
     {"name": "#", "id": "rank", "type": "numeric"},
+    {"name": "✦", "id": "rule_match"},
     {"name": "Tier", "id": "tier"},
     {"name": "Symbol", "id": "symbol"},
     {"name": "Status", "id": "daily_status"},
     {"name": "Side", "id": "side"},
     {"name": "Now $", "id": "current_price", "type": "numeric",
      "format": dash_table.FormatTemplate.money(2)},
+    {"name": "Px", "id": "price_source"},
     {"name": "Thesis $", "id": "thesis_price", "type": "numeric",
      "format": dash_table.FormatTemplate.money(2)},
     {"name": "Dist %", "id": "distance_pct", "type": "numeric"},
@@ -48,51 +51,46 @@ def build_sniper_board_layout() -> html.Div:
         hidden=False,  # Default landing page — visible on load
         className="kb-animate-in",
         children=[
-            # Section header
+            # Section header — tight, single-line where possible
             html.Div(
                 className="kb-section-header",
                 style={"display": "flex", "alignItems": "center",
-                       "justifyContent": "space-between"},
+                       "justifyContent": "space-between",
+                       "gap": "16px", "flexWrap": "wrap"},
                 children=[
                     html.Div([
                         # Objective question — the one thing this dashboard exists to answer.
-                        # Stays as the page H2 so the user sees it the moment they land.
-                        html.H2([
-                            "What stocks will make me money today?",
-                        ], style={"fontWeight": "700", "marginBottom": "4px"}),
+                        html.H2(
+                            ["What stocks will make me money today?", rules_tooltip("swing")],
+                            style={"fontWeight": "700", "marginBottom": "2px"},
+                        ),
                         html.Div(
-                            style={"display": "flex", "gap": "16px", "alignItems": "center"},
+                            style={"display": "flex", "gap": "10px",
+                                   "alignItems": "baseline"},
                             children=[
                                 html.P(
-                                    "Top setups, EV-ranked, after costs. Empty answer = sit out.",
+                                    "Top setups · EV-ranked · after costs · empty = sit out",
                                     className="kb-section-desc",
                                     style={"margin": "0"},
                                 ),
-                                # Data freshness timestamp
+                                # Compact freshness timestamp
                                 html.Span(
                                     id="sniper-freshness-badge",
                                     style={
-                                        "fontSize": "11px",
-                                        "padding": "2px 8px",
-                                        "borderRadius": "4px",
-                                        "background": "rgba(212, 160, 23, 0.15)",
-                                        "color": "#D4A017",
-                                        "border": "1px solid rgba(212, 160, 23, 0.3)",
+                                        "fontSize": "0.7rem",
+                                        "color": "var(--kb-text-muted)",
+                                        "fontFamily": "var(--kb-font-mono)",
                                         "whiteSpace": "nowrap",
                                     },
                                 ),
-                                # Degraded mode banner
+                                # Degraded mode marker — HIDDEN; the top status
+                                # bar's READINESS pill is the single source of
+                                # truth for degraded state. Kept as empty span
+                                # so the existing callback that writes to it
+                                # doesn't crash.
                                 html.Span(
                                     id="sniper-degraded-banner",
-                                    style={
-                                        "fontSize": "11px",
-                                        "padding": "2px 8px",
-                                        "borderRadius": "4px",
-                                        "background": "rgba(255, 0, 110, 0.15)",
-                                        "color": "#ff4488",
-                                        "border": "1px solid rgba(255, 0, 110, 0.3)",
-                                        "display": "none",
-                                    },
+                                    style={"display": "none"},
                                 ),
                             ],
                         ),
@@ -165,10 +163,14 @@ def build_sniper_board_layout() -> html.Div:
                 style={"display": "flex", "gap": "16px", "marginBottom": "12px",
                        "flexWrap": "wrap", "alignItems": "center"},
                 children=[
-                    _kpi_chip("sniper-total", "SETUPS", "0", cfg.accent_primary),
-                    _kpi_chip("sniper-long", "LONG", "0", cfg.accent_long),
-                    _kpi_chip("sniper-short", "SHORT", "0", cfg.accent_short),
-                    _kpi_chip("sniper-triple", "TRIPLE LOCK", "0", "#ffd43b"),
+                    _kpi_chip("sniper-total", "SETUPS", "0", cfg.accent_primary,
+                              chip_id="sniper-chip-all"),
+                    _kpi_chip("sniper-long", "LONG", "0", cfg.accent_long,
+                              chip_id="sniper-chip-long"),
+                    _kpi_chip("sniper-short", "SHORT", "0", cfg.accent_short,
+                              chip_id="sniper-chip-short"),
+                    _kpi_chip("sniper-triple", "TRIPLE LOCK", "0", "#ffd43b",
+                              chip_id="sniper-chip-triple"),
                     _kpi_chip("sniper-avg-rr", "AVG R:R", "0", "#00ff88"),
                     _kpi_chip("sniper-regime", "REGIME", "---", cfg.accent_neutral),
                 ],
@@ -211,6 +213,7 @@ def build_sniper_board_layout() -> html.Div:
                         id="sniper-top10-table",
                         columns=[
                             {"name": "#",       "id": "rank",       "type": "numeric"},
+                            {"name": "✦",       "id": "rule_match"},
                             {"name": "Symbol",  "id": "symbol"},
                             {"name": "Side",    "id": "side"},
                             {"name": "Now",     "id": "current_price",
@@ -235,6 +238,13 @@ def build_sniper_board_layout() -> html.Div:
                         style_header=TABLE_HEADER_STYLE,
                         style_cell=TABLE_CELL_STYLE,
                         style_data_conditional=[
+                            # Rule-match highlight — ideas that pass your trade rules
+                            {"if": {"filter_query": '{rule_match} = "✦"'},
+                             "backgroundColor": "rgba(255,212,59,0.08)",
+                             "borderLeft": "3px solid #ffd43b"},
+                            {"if": {"filter_query": '{rule_match} = "✦"',
+                                    "column_id": "rule_match"},
+                             "color": "#ffd43b", "fontWeight": "bold"},
                             {"if": {"column_id": "symbol"},
                              "color": "#4da3ff", "fontWeight": "700"},
                             {"if": {"filter_query": "{side} = 'LONG'", "column_id": "side"},
@@ -271,6 +281,20 @@ def build_sniper_board_layout() -> html.Div:
                              "textAlign": "center"},
                         ],
                         style_data_conditional=[
+                            # Rule-match highlight — ideas that pass your trade rules
+                            {"if": {"filter_query": '{rule_match} = "✦"'},
+                             "backgroundColor": "rgba(255,212,59,0.08)",
+                             "borderLeft": "3px solid #ffd43b"},
+                            {"if": {"filter_query": '{rule_match} = "✦"',
+                                    "column_id": "rule_match"},
+                             "color": "#ffd43b", "fontWeight": "bold"},
+                            # Price source: LIVE = green, EOD = muted
+                            {"if": {"filter_query": '{price_source} = "LIVE"',
+                                    "column_id": "price_source"},
+                             "color": "#00ff88", "fontWeight": "bold"},
+                            {"if": {"filter_query": '{price_source} = "EOD"',
+                                    "column_id": "price_source"},
+                             "color": "#888"},
                             # Symbol clickable
                             {"if": {"column_id": "symbol"},
                              "color": "#4da3ff", "cursor": "pointer",
@@ -537,21 +561,21 @@ def build_sniper_board_layout() -> html.Div:
     )
 
 
-def _kpi_chip(card_id: str, title: str, value: str, color: str) -> html.Div:
-    """Compact KPI chip — inline, not a big card."""
+def _kpi_chip(card_id: str, title: str, value: str, color: str,
+              chip_id: str | None = None) -> html.Div:
+    """Compact KPI chip. If chip_id is provided, the chip is wired as a
+    clickable filter (cursor pointer, hover lift, active state).
+    """
+    is_clickable = chip_id is not None
+    cls = "kb-kpi-chip clickable" if is_clickable else "kb-kpi-chip"
     return html.Div(
-        style={
-            "display": "flex", "alignItems": "center", "gap": "6px",
-            "padding": "4px 10px", "borderRadius": "4px",
-            "border": f"1px solid {color}33",
-            "backgroundColor": f"{color}11",
-        },
+        id=chip_id or f"{card_id}-chip",
+        className=cls,
+        n_clicks=0,
         children=[
-            html.Span(title, style={"fontSize": "0.65rem", "color": "#888",
-                                     "textTransform": "uppercase", "letterSpacing": "0.05em"}),
-            html.Span(value, id=card_id, style={"fontSize": "0.9rem", "fontWeight": "800",
-                                                  "color": color,
-                                                  "fontFamily": "'JetBrains Mono', monospace"}),
+            html.Span(title, className="kb-kpi-label"),
+            html.Span(value, id=card_id, className="kb-kpi-val",
+                      style={"color": color}),
         ],
     )
 

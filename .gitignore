@@ -10,8 +10,8 @@ data/meta/
 
 # Local runtime databases
 signal_scanner/data/*.db
-signal_scanner/data/*.db-shm
-signal_scanner/data/*.db-wal
+*.db-shm
+*.db-wal
 
 # Secrets
 .env
@@ -20,3 +20,18 @@ signal_scanner/data/*.db-wal
 .pytest_tmp/
 .pytest_cache/
 .tmp/
+pytest-cache-files-*/
+
+# Virtualenv (rebuildable from pyproject)
+.venv/
+venv/
+
+# Editable-install metadata (build artifact)
+*.egg-info/
+
+# Local IDE / Claude state
+.claude/settings.local.json
+
+# Logs (kept locally, not tracked)
+logs/*.log
+signal_scanner/logs/*.log

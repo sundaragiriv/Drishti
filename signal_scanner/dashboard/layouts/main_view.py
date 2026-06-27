@@ -8,6 +8,7 @@ import dash_bootstrap_components as dbc
 from dash import dash_table, dcc, html
 
 from signal_scanner.config import COLUMN_TOOLTIPS, DashboardConfig
+from signal_scanner.dashboard.trade_rules import rules_tooltip
 
 cfg = DashboardConfig()
 
@@ -158,8 +159,6 @@ def build_main_layout() -> html.Div:
                                         [html.I(className="fas fa-chart-area me-1"), "Forecast"],
                                         id="nav-predictive",
                                         href="#",
-                                        disabled=True,
-                                        style={"opacity": "0.4", "cursor": "not-allowed"},
                                     ),
                                     dbc.NavLink(
                                         [html.I(className="fas fa-brain me-1"), "Intelligence"],
@@ -269,94 +268,97 @@ def build_main_layout() -> html.Div:
             html.Div(
                 className="kb-page-content",
                 children=[
-                    # ---- COMBINED MARKET STATUS RIBBON ----
+                    # ---- TERMINAL STATUS BAR ----
+                    # Single-row, terminal-aligned. Status pills (left) carry
+                    # the at-a-glance "can I trade today?" answer. Schedule
+                    # info (right) is muted secondary detail.
                     html.Div(
                         id="regime-banner",
-                        className="kb-banner mb-4",
+                        className="kb-banner",
                         children=[
-                            # Left: Market Regime
+                            # LEFT: 4 status pills (regime + readiness + EOD + kill)
                             html.Div(
-                                style={"display": "flex", "alignItems": "center", "gap": "10px"},
+                                className="kb-banner-pills",
                                 children=[
-                                    html.I(
-                                        className="fas fa-bolt",
-                                        style={"fontSize": "14px", "color": cfg.accent_neutral},
-                                    ),
-                                    html.Span("MARKET REGIME", className="kb-label"),
+                                    # Regime pill — keeps id="regime-status" inside
+                                    # for the existing scanner_status callback.
                                     html.Span(
-                                        "Loading...",
-                                        id="regime-status",
-                                        style={
-                                            "color": cfg.accent_neutral,
-                                            "fontWeight": "bold",
-                                            "fontSize": "14px",
-                                        },
+                                        id="regime-pill",
+                                        className="kb-status-pill",
+                                        children=[
+                                            html.Span(className="kb-pill-dot"),
+                                            html.Span("REGIME", className="kb-pill-key"),
+                                            html.Span("…", id="regime-status",
+                                                      className="kb-pill-val"),
+                                        ],
                                     ),
                                     html.Span(
-                                        "",
-                                        id="regime-description",
-                                        style={"color": cfg.text_muted, "fontSize": "0.82rem", "marginLeft": "6px"},
+                                        id="readiness-pill",
+                                        className="kb-status-pill",
+                                        children=[
+                                            html.Span(className="kb-pill-dot"),
+                                            html.Span("READY", className="kb-pill-key"),
+                                            html.Span("READY",
+                                                      id="readiness-pill-text",
+                                                      className="kb-pill-val"),
+                                        ],
+                                    ),
+                                    html.Span(
+                                        id="eod-age-pill",
+                                        className="kb-status-pill",
+                                        children=[
+                                            html.Span(className="kb-pill-dot"),
+                                            html.Span("EOD", className="kb-pill-key"),
+                                            html.Span("--",
+                                                      id="eod-age-pill-text",
+                                                      className="kb-pill-val"),
+                                        ],
+                                    ),
+                                    html.Span(
+                                        id="kill-switch-pill",
+                                        className="kb-status-pill",
+                                        children=[
+                                            html.Span(className="kb-pill-dot"),
+                                            html.Span("KILL", className="kb-pill-key"),
+                                            html.Span("OFF",
+                                                      id="kill-switch-pill-text",
+                                                      className="kb-pill-val"),
+                                        ],
                                     ),
                                 ],
                             ),
-                            # Center: Divider + Trade Mode
+                            # RIGHT: muted schedule strip — Trade · Entry · EOD eval · Swing
                             html.Div(
                                 id="time-guard-banner",
-                                style={"display": "flex", "alignItems": "center", "gap": "16px"},
+                                className="kb-banner-schedule",
                                 children=[
-                                    html.Span("|", style={"color": cfg.border_color, "fontSize": "18px"}),
-                                    html.Div(
-                                        style={"display": "flex", "alignItems": "center", "gap": "6px"},
-                                        children=[
-                                            html.Span(id="time-guard-icon", style={"fontSize": "14px"}),
-                                            html.Span("TRADE MODE", className="kb-label"),
-                                            html.Span(
-                                                "ACTIVE",
-                                                id="trade-mode-status",
-                                                style={"color": cfg.accent_long, "fontWeight": "bold", "fontSize": "13px"},
-                                            ),
-                                        ],
-                                    ),
-                                    html.Span("|", style={"color": cfg.border_color, "fontSize": "18px"}),
-                                    html.Div(
-                                        style={"display": "flex", "alignItems": "center", "gap": "6px"},
-                                        children=[
-                                            html.Span("ENTRY CUTOFF", className="kb-label"),
-                                            html.Span(
-                                                "3:30 PM",
-                                                id="entry-cutoff-status",
-                                                style={"color": cfg.text_color, "fontSize": "12px", "fontWeight": "bold"},
-                                            ),
-                                        ],
-                                    ),
-                                    html.Div(
-                                        style={"display": "flex", "alignItems": "center", "gap": "6px"},
-                                        children=[
-                                            html.Span("EOD EVAL", className="kb-label"),
-                                            html.Span(
-                                                "3:55 PM",
-                                                id="eod-eval-status",
-                                                style={"color": cfg.text_color, "fontSize": "12px", "fontWeight": "bold"},
-                                            ),
-                                        ],
-                                    ),
-                                    html.Div(
-                                        style={"display": "flex", "alignItems": "center", "gap": "6px"},
-                                        children=[
-                                            html.Span("SWING", className="kb-label"),
-                                            html.Span(
-                                                "0",
-                                                id="swing-count-status",
-                                                style={"color": "#b388ff", "fontSize": "13px", "fontWeight": "bold"},
-                                            ),
-                                        ],
-                                    ),
-                                    html.Div(
-                                        id="time-guard-detail",
-                                        style={"color": cfg.text_muted, "fontSize": "0.78rem"},
-                                    ),
+                                    html.Span([
+                                        html.Span("Trade ", className="kb-meta-key"),
+                                        html.Span("ACTIVE", id="trade-mode-status",
+                                                  className="kb-meta-val"),
+                                    ], className="kb-meta-item"),
+                                    html.Span([
+                                        html.Span("Entry ", className="kb-meta-key"),
+                                        html.Span("3:30 PM", id="entry-cutoff-status",
+                                                  className="kb-meta-val"),
+                                    ], className="kb-meta-item"),
+                                    html.Span([
+                                        html.Span("EOD eval ", className="kb-meta-key"),
+                                        html.Span("3:55 PM", id="eod-eval-status",
+                                                  className="kb-meta-val"),
+                                    ], className="kb-meta-item"),
+                                    html.Span([
+                                        html.Span("Swing ", className="kb-meta-key"),
+                                        html.Span("0", id="swing-count-status",
+                                                  className="kb-meta-val"),
+                                    ], className="kb-meta-item"),
                                 ],
                             ),
+                            # Hidden legacy IDs kept so existing callbacks
+                            # (which output to these targets) don't crash.
+                            html.Span(id="time-guard-icon", style={"display": "none"}),
+                            html.Span(id="regime-description", style={"display": "none"}),
+                            html.Div(id="time-guard-detail", style={"display": "none"}),
                         ],
                     ),
 
@@ -648,6 +650,9 @@ def build_main_layout() -> html.Div:
                     # ---- LIVE SCANNER SECTION (wraps Scanner + AI Signals + Intraday ML + EOD) ----
                     _build_live_signals_section(),
 
+                    # ---- FORECAST SECTION (predictive — model-driven outlook) ----
+                    _build_forecast_section(),
+
                     # ---- PERFORMANCE SECTION (merged Paper + My Trades) ----
                     _build_performance_section(),
 
@@ -851,6 +856,12 @@ def _build_performance_section():
     return build_performance_layout()
 
 
+def _build_forecast_section():
+    """Lazily import and build the Forecast layout."""
+    from signal_scanner.dashboard.layouts.forecast_view import build_forecast_layout
+    return build_forecast_layout()
+
+
 def _build_stock_ideas_section_legacy():
     """Render full Stock Ideas layout (hidden) so callback IDs exist."""
     from signal_scanner.dashboard.layouts.reports_view import build_stock_ideas_layout
@@ -881,6 +892,7 @@ def _build_live_signals_section():
                     html.H2(id="intraday-section-title", children=[
                         "Intraday",
                         html.Span("LIVE", className="kb-section-badge"),
+                        rules_tooltip("intraday"),
                     ]),
                     html.P(
                         id="intraday-section-desc",
@@ -1202,6 +1214,7 @@ def _build_live_signals_section():
                     dash_table.DataTable(
                         id="intraday-ideas-table",
                         columns=[
+                            {"name": "✦", "id": "rule_match"},
                             {"name": "State", "id": "state"},
                             {"name": "Symbol", "id": "symbol"},
                             {"name": "Side", "id": "side"},
@@ -1230,6 +1243,13 @@ def _build_live_signals_section():
                              "fontWeight": "700", "color": "#4da3ff", "cursor": "pointer"},
                         ],
                         style_data_conditional=[
+                            # Rule-match highlight — ideas that pass your trade rules
+                            {"if": {"filter_query": '{rule_match} = "✦"'},
+                             "backgroundColor": "rgba(255,212,59,0.08)",
+                             "borderLeft": "3px solid #ffd43b"},
+                            {"if": {"filter_query": '{rule_match} = "✦"',
+                                    "column_id": "rule_match"},
+                             "color": "#ffd43b", "fontWeight": "bold"},
                             {"if": {"filter_query": '{state} = "NEW"', "column_id": "state"},
                              "color": "#00ff88", "fontWeight": "bold"},
                             {"if": {"filter_query": '{state} = "ENTERED"', "column_id": "state"},
@@ -1402,7 +1422,7 @@ def _build_live_signals_section():
             # ============================================================
             html.Div(id="ls-options-flow-container", hidden=True, children=[
                 html.Div(className="kb-card mb-4", children=[
-                    html.H4("Options Board", style={"color": cfg.accent_primary, "marginBottom": "4px"}),
+                    html.H4(["Options Board", rules_tooltip("options")], style={"color": cfg.accent_primary, "marginBottom": "4px"}),
                     html.P(
                         "Contract-level options intelligence from Polygon Options Starter. "
                         "Top OI contracts across Sniper universe. Delayed 15 min.",

@@ -61,6 +61,9 @@ def main():
     from signal_scanner.dashboard.sniper_callbacks import register_sniper_callbacks
     register_sniper_callbacks(app, db, scanner=scanner)
 
+    from signal_scanner.dashboard.forecast_callbacks import register_forecast_callbacks
+    register_forecast_callbacks(app)
+
     logger.info(f"Dashboard at http://127.0.0.1:{args.port}")
     logger.info("IBKR not connected — scanner features disabled, intelligence/sniper/performance active")
 

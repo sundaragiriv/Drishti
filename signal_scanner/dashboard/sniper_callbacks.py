@@ -104,25 +104,18 @@ def register_sniper_callbacks(app, db_manager, scanner=None) -> None:
         from signal_scanner.core.telemetry import record_skip, SkipReason, Subsystem
 
         badge_text = ""
+        # Inline DEGRADED banner is suppressed — the top status bar's
+        # READINESS pill is the single source of truth for degraded state.
+        # We still run the freshness check below so scanner.readiness and
+        # scanner.data_degraded stay accurate.
         degraded_text = ""
-        degraded_style = {
-            "fontSize": "11px", "padding": "2px 8px", "borderRadius": "4px",
-            "background": "rgba(255, 0, 110, 0.15)", "color": "#ff4488",
-            "border": "1px solid rgba(255, 0, 110, 0.3)", "display": "none",
-        }
+        degraded_style = {"display": "none"}
         try:
             price_ok, lag, latest_str = compute_price_freshness()
             if latest_str:
                 badge_text = f"Prices as of: {latest_str}"
 
-                # Build readiness-aware status text
-                readiness_label = ""
-                if scanner and scanner.readiness:
-                    readiness_label = f" | {scanner.readiness.readiness_status}"
-
                 if not price_ok:
-                    degraded_text = f"DEGRADED — prices {lag} trading days stale{readiness_label}"
-                    degraded_style["display"] = "inline"
                     record_skip(Subsystem.EXECUTION_LOOP, SkipReason.DATA_STALE,
                                  f"dashboard: {lag}d stale", persist=False)
                     if scanner:
@@ -148,6 +141,62 @@ def register_sniper_callbacks(app, db_manager, scanner=None) -> None:
             pass
 
         return badge_text, degraded_text, degraded_style
+
+    # ------------------------------------------------------------------
+    # 1a. KPI chip clicks → side/source filter
+    #     Clicking a KPI chip (SETUPS, LONG, SHORT, TRIPLE LOCK) drives the
+    #     filter inputs that update_sniper_board() already watches.
+    # ------------------------------------------------------------------
+    @app.callback(
+        Output("sniper-side-filter", "value", allow_duplicate=True),
+        Output("sniper-source-filter", "value", allow_duplicate=True),
+        Input("sniper-chip-all", "n_clicks"),
+        Input("sniper-chip-long", "n_clicks"),
+        Input("sniper-chip-short", "n_clicks"),
+        Input("sniper-chip-triple", "n_clicks"),
+        State("sniper-side-filter", "value"),
+        State("sniper-source-filter", "value"),
+        prevent_initial_call=True,
+    )
+    def kpi_chip_to_filter(_n_all, _n_long, _n_short, _n_triple,
+                            cur_side, cur_source):
+        ctx = callback_context
+        if not ctx.triggered:
+            raise PreventUpdate
+        trigger_id = ctx.triggered[0]["prop_id"].split(".")[0]
+        if trigger_id == "sniper-chip-all":
+            return "ALL", "ALL"
+        if trigger_id == "sniper-chip-long":
+            return "LONG", cur_source or "ALL"
+        if trigger_id == "sniper-chip-short":
+            return "SHORT", cur_source or "ALL"
+        if trigger_id == "sniper-chip-triple":
+            return cur_side or "ALL", "TRIPLE_LOCK"
+        raise PreventUpdate
+
+    # ------------------------------------------------------------------
+    # 1b. Reflect active filter on chips (highlight which chip is selected)
+    # ------------------------------------------------------------------
+    @app.callback(
+        Output("sniper-chip-all", "className"),
+        Output("sniper-chip-long", "className"),
+        Output("sniper-chip-short", "className"),
+        Output("sniper-chip-triple", "className"),
+        Input("sniper-side-filter", "value"),
+        Input("sniper-source-filter", "value"),
+        prevent_initial_call=False,
+    )
+    def highlight_active_chip(side, source):
+        base = "kb-kpi-chip clickable"
+        active = "kb-kpi-chip clickable active"
+        side = (side or "ALL").upper()
+        source = (source or "ALL").upper()
+        return (
+            active if side == "ALL" and source == "ALL" else base,
+            active if side == "LONG" else base,
+            active if side == "SHORT" else base,
+            active if source == "TRIPLE_LOCK" else base,
+        )
 
     # ------------------------------------------------------------------
     # 1. GLOBAL SEARCH — ticker input → selected-ticker (ISR navigation)
@@ -192,7 +241,9 @@ def register_sniper_callbacks(app, db_manager, scanner=None) -> None:
             return [], "0", "0", "0", "0", "0.0", "---", {"color": "#888"}, [], "Sit out — no qualifying setups"
 
         try:
-            ideas = _load_sniper_ideas(conn)
+            from signal_scanner.core.live_bar_store import LiveBarStore
+            store = LiveBarStore()
+            ideas = _load_sniper_ideas(conn, store)
             # Daily revalidation — compute fast status on top of slow thesis
             from signal_scanner.paper.idea_revalidator import revalidate_all_ideas
             ideas = revalidate_all_ideas(conn, ideas)
@@ -218,13 +269,15 @@ def register_sniper_callbacks(app, db_manager, scanner=None) -> None:
         except Exception:
             pass
 
-        # Apply regime badge to each idea
+        # Apply regime badge + rule-match highlight to each idea
+        from signal_scanner.dashboard.trade_rules import rule_match_mark
         for idea in ideas:
             if regime_state is not None:
                 label, color, _ = REGIME_DISPLAY.get(regime_state, ("?", "#888", ""))
                 idea["regime_badge"] = label
             else:
                 idea["regime_badge"] = "N/A"
+            idea["rule_match"] = rule_match_mark("swing", idea, regime_state)
 
         # Apply filters
         filtered = ideas
@@ -307,17 +360,25 @@ def register_sniper_callbacks(app, db_manager, scanner=None) -> None:
         Output("sniper-detail-idea-id", "data"),
         Output("sniper-detail-idea-state", "children"),
         Input("sniper-board-table", "active_cell"),
+        Input("sniper-top10-table", "active_cell"),
         State("sniper-board-table", "derived_virtual_data"),
         State("sniper-board-table", "data"),
+        State("sniper-top10-table", "derived_virtual_data"),
+        State("sniper-top10-table", "data"),
         prevent_initial_call=True,
     )
-    def sniper_row_detail(active_cell, virtual_data, data):
-        if not active_cell:
-            raise PreventUpdate
+    def sniper_row_detail(main_cell, top_cell, main_vdata, main_data,
+                          top_vdata, top_data):
+        from dash import ctx
+        # Either table can drive the detail panel.
+        if ctx.triggered_id == "sniper-top10-table":
+            active_cell = top_cell
+            view_data = top_vdata if top_vdata else top_data
+        else:
+            active_cell = main_cell
+            view_data = main_vdata if main_vdata else main_data
 
-        # Use derived_virtual_data (sorted/filtered view) if available, else raw data
-        view_data = virtual_data if virtual_data else data
-        if not view_data:
+        if not active_cell or not view_data:
             raise PreventUpdate
 
         row_idx = active_cell.get("row", 0)
@@ -409,11 +470,12 @@ def register_sniper_callbacks(app, db_manager, scanner=None) -> None:
         State("sniper-detail-symbol", "children"),
         State("sniper-board-table", "active_cell"),
         State("sniper-board-table", "data"),
+        State("sniper-board-table", "derived_virtual_data"),
         State("sniper-trade-modal", "is_open"),
         prevent_initial_call=True,
     )
     def sniper_open_trade_modal(enter_clicks, cancel_clicks, symbol,
-                                active_cell, data, is_open):
+                                active_cell, data, virtual_data, is_open):
         from dash import ctx
         trigger = ctx.triggered_id
         if trigger == "sniper-trade-cancel":
@@ -421,17 +483,40 @@ def register_sniper_callbacks(app, db_manager, scanner=None) -> None:
         if trigger != "sniper-enter-trade" or not enter_clicks or not symbol:
             raise PreventUpdate
 
-        # Pre-fill from row data
+        # Resolve the clicked row from the SORTED/FILTERED view — active_cell.row
+        # indexes the displayed order, not the raw data array.
+        view = virtual_data if virtual_data else (data or [])
         row = {}
-        if active_cell and data:
+        if active_cell is not None and view:
             idx = active_cell.get("row", 0)
-            if idx < len(data):
-                row = data[idx]
+            if 0 <= idx < len(view):
+                row = view[idx]
+        # Fall back to matching by the detail-panel symbol if indexing missed.
+        if (not row or row.get("symbol") != symbol) and view:
+            row = next((r for r in view if r.get("symbol") == symbol), row)
 
+        side = row.get("side", "LONG")
         entry_price = row.get("entry_price")
         stop = row.get("stop_price")
         target = row.get("target_1")
-        side = row.get("side", "LONG")
+
+        # Realtime: re-anchor to the LIVE price at click-time so the operator
+        # enters at levels relative to where the stock trades NOW.
+        try:
+            from signal_scanner.core.live_bar_store import LiveBarStore
+            live_px = LiveBarStore().get_latest_price(symbol)
+            if live_px and live_px > 0:
+                lconn = safe_duckdb_connect(read_only=True)
+                if lconn:
+                    try:
+                        e2, s2, t1b, _t2, _rr = _estimate_levels(
+                            lconn, symbol, side, entry_override=live_px)
+                    finally:
+                        lconn.close()
+                    if e2:
+                        entry_price, stop, target = e2, s2, t1b
+        except Exception:
+            pass
 
         # Default quantity
         qty = None
@@ -892,12 +977,15 @@ def register_sniper_callbacks(app, db_manager, scanner=None) -> None:
         return breakdown, overall_wr, regime_wr, pf
 
 
-def _load_sniper_ideas(conn) -> list[dict]:
+def _load_sniper_ideas(conn, store=None) -> list[dict]:
     """Load EV-ranked trade ideas from intelligence_scores.
 
     LONG ideas: swing_signal=BUY + conviction >= 65 (institutional accumulation)
     SHORT ideas: short_swing_signal=SHORT + short_conviction_score >= 45 (institutional distribution)
     Both pools merged and EV-ranked together.
+
+    `store` is a LiveBarStore; when a symbol is being streamed its live price
+    anchors the entry/stop/target so the levels are tradeable in real time.
     """
     try:
         from signal_scanner.institutional_intel.config import get_active_quarter
@@ -996,7 +1084,15 @@ def _load_sniper_ideas(conn) -> list[dict]:
         empty = 5 - filled
         strength_visual = ("*" * filled) + ("." * empty)
 
-        entry, stop, t1, t2, rr = _estimate_levels(conn, ticker, side)
+        # Realtime: anchor levels to the live price when the symbol is streamed
+        live_px = None
+        if store is not None:
+            try:
+                live_px = store.get_latest_price(ticker)
+            except Exception:
+                live_px = None
+        entry, stop, t1, t2, rr = _estimate_levels(conn, ticker, side, entry_override=live_px)
+        price_source = "LIVE" if (live_px and live_px > 0) else "EOD"
 
         # EV score uses effective conviction for both sides
         ev = round(effective_conv * (rr or 1) * filled / 100, 1)
@@ -1005,6 +1101,7 @@ def _load_sniper_ideas(conn) -> list[dict]:
             "rank": 0,
             "symbol": ticker,
             "current_price": entry,
+            "price_source": price_source,
             "side": side,
             "signal_strength": strength_visual,
             "regime_badge": "",
@@ -1112,8 +1209,13 @@ def _load_sniper_ideas(conn) -> list[dict]:
     return ideas
 
 
-def _estimate_levels(conn, ticker: str, side: str):
-    """Estimate entry, stop, T1, T2 from recent price data."""
+def _estimate_levels(conn, ticker: str, side: str, entry_override: float | None = None):
+    """Estimate entry, stop, T1, T2 from daily ATR.
+
+    `entry_override` anchors the levels to a LIVE price (so stops/targets are
+    relative to where the stock trades NOW, not yesterday's close). ATR is
+    still measured from daily bars — a stable volatility unit.
+    """
     try:
         row = conn.execute("""
             SELECT close, high, low
@@ -1129,19 +1231,21 @@ def _estimate_levels(conn, ticker: str, side: str):
         return None, None, None, None, None
 
     latest_close = row[0][0]
-    # ATR approximation from last 20 bars
+    # Anchor to the live price when provided, else fall back to last close.
+    base = entry_override if (entry_override and entry_override > 0) else latest_close
+    # ATR approximation from last 20 daily bars
     ranges = [r[1] - r[2] for r in row if r[1] and r[2]]
-    atr = sum(ranges) / len(ranges) if ranges else latest_close * 0.02
+    atr = sum(ranges) / len(ranges) if ranges else base * 0.02
 
     if side == "LONG":
-        entry = round(latest_close, 2)
-        stop = round(latest_close - 1.5 * atr, 2)
+        entry = round(base, 2)
+        stop = round(base - 1.5 * atr, 2)
         risk = entry - stop
         t1 = round(entry + 2.5 * risk, 2)
         t2 = round(entry + 4.0 * risk, 2)
     else:
-        entry = round(latest_close, 2)
-        stop = round(latest_close + 1.5 * atr, 2)
+        entry = round(base, 2)
+        stop = round(base + 1.5 * atr, 2)
         risk = stop - entry
         t1 = round(entry - 2.5 * risk, 2)
         t2 = round(entry - 4.0 * risk, 2)

@@ -51,6 +51,14 @@ MAX_ENTRIES_PER_DAY = 8
 # Source tag
 REC_SOURCE = "CONTEXT_MOMENTUM"
 
+# Stop/target sizing — the intraday stop is a fraction of the stock's DAILY
+# ATR(14), not the 1-min bar range (which was noise-tight: pennies on a $200
+# stock). Targets are R-multiples of that risk unit.
+STOP_DAILY_ATR_FRAC = 0.5   # stop distance = 0.5 x daily ATR(14)
+MIN_STOP_PCT = 0.006        # floor: stop is always >= 0.6% of price
+TARGET_1_R = 2.0
+TARGET_2_R = 3.0
+
 
 class ContextMomentumScanner:
     """Context-driven intraday entry — fires on convergence, not patterns."""
@@ -61,6 +69,8 @@ class ContextMomentumScanner:
         self._snapshot = intelligence_snapshot or {}
         self._entered_today: set = set()
         self._last_date: str = ""
+        self._atr_cache: dict = {}   # {ticker: daily_ATR(14)} — rebuilt once/day
+        self._atr_date: str = ""
 
     def evaluate(self, ticker: str, now_et: datetime) -> Optional[Dict]:
         """Evaluate a ticker for context momentum entry.
@@ -123,19 +133,26 @@ class ContextMomentumScanner:
         if entry_price <= 0:
             return None
 
-        # Compute stops/targets from ATR proxy (using bar range)
-        ranges = bars["High"] - bars["Low"]
-        atr = float(ranges.tail(20).mean()) if len(ranges) >= 20 else float(ranges.mean())
-        if atr <= 0:
-            atr = entry_price * 0.015  # 1.5% fallback
+        # Size the stop to the stock's DAILY ATR(14) — real daily movement,
+        # not 1-min noise. Fall back to the intraday bar range if the daily
+        # ATR is unavailable. A 0.6%-of-price floor is always enforced so a
+        # stop can never land inside normal intraday wiggle.
+        daily_atr = self._atr_cache.get(ticker)
+        if daily_atr and daily_atr > 0:
+            stop_dist = STOP_DAILY_ATR_FRAC * daily_atr
+        else:
+            ranges = bars["High"] - bars["Low"]
+            bar_atr = float(ranges.tail(20).mean()) if len(ranges) >= 20 else float(ranges.mean())
+            stop_dist = 1.5 * bar_atr
+        stop_dist = max(stop_dist, MIN_STOP_PCT * entry_price)
 
-        stop = round(entry_price - 1.5 * atr, 4)
+        stop = round(entry_price - stop_dist, 4)
         r_unit = entry_price - stop
         if r_unit <= 0:
             return None
 
-        target_1 = round(entry_price + 2.0 * r_unit, 4)
-        target_2 = round(entry_price + 3.0 * r_unit, 4)
+        target_1 = round(entry_price + TARGET_1_R * r_unit, 4)
+        target_2 = round(entry_price + TARGET_2_R * r_unit, 4)
 
         return {
             "strategy": "CONTEXT_MOMENTUM",
@@ -175,6 +192,7 @@ class ContextMomentumScanner:
         if today != self._last_date:
             self._entered_today.clear()
             self._last_date = today
+        self._ensure_daily_atr_cache(today)
 
         # Count current open positions to respect limit
         try:
@@ -200,6 +218,50 @@ class ContextMomentumScanner:
                 )
 
         return signals
+
+    def _ensure_daily_atr_cache(self, today: str) -> None:
+        """Build a {ticker: daily ATR(14)} map once per day from the warehouse.
+
+        Sized stops need the stock's real daily movement; the live bar store
+        only holds today's 1-min bars, so we read daily OHLC from DuckDB.
+        Read-only + cached once/day to avoid per-cycle DB load.
+        """
+        if self._atr_date == today and self._atr_cache:
+            return
+        self._atr_date = today
+        try:
+            from signal_scanner.institutional_intel.config import safe_duckdb_connect
+            conn = safe_duckdb_connect(read_only=True)
+            if conn is None:
+                return
+            try:
+                rows = conn.execute(
+                    """
+                    WITH recent AS (
+                        SELECT ticker, trade_date, high, low, close,
+                               LAG(close) OVER (PARTITION BY ticker ORDER BY trade_date) AS prev_close
+                        FROM fact_daily_prices
+                        WHERE trade_date >= current_date - INTERVAL '40' DAY
+                    ),
+                    tr AS (
+                        SELECT ticker,
+                               GREATEST(high - low, ABS(high - prev_close), ABS(low - prev_close)) AS tr,
+                               ROW_NUMBER() OVER (PARTITION BY ticker ORDER BY trade_date DESC) AS rn
+                        FROM recent
+                        WHERE prev_close IS NOT NULL
+                    )
+                    SELECT ticker, AVG(tr) AS atr14
+                    FROM tr WHERE rn <= 14
+                    GROUP BY ticker
+                    """
+                ).fetchall()
+                self._atr_cache = {r[0]: float(r[1]) for r in rows if r[1] and r[1] > 0}
+                logger.info("CONTEXT_MOMENTUM: daily ATR cache built for {} tickers",
+                            len(self._atr_cache))
+            finally:
+                conn.close()
+        except Exception as e:
+            logger.warning("CONTEXT_MOMENTUM: daily ATR cache failed ({}); using fallback stops", e)
 
     def _compute_qty(self, price: float) -> int:
         from math import ceil

@@ -418,6 +418,7 @@ def register_callbacks(app, db_manager, scanner) -> None:
         Output("intelligence-section", "hidden"),
         Output("sniper-board-section", "hidden"),
         Output("live-signals-section", "hidden"),
+        Output("forecast-section", "hidden"),
         Output("performance-section", "hidden"),
         # Auto sub-tab switching for Intraday ML / Snipers / Options nav
         Output("ls-tabs", "value"),
@@ -434,7 +435,7 @@ def register_callbacks(app, db_manager, scanner) -> None:
         # ISR
         Output("stock-report-section", "hidden"),
         Output("active-nav", "data"),
-        # Active states for 7 tabs (predictive is disabled but needs output)
+        # Active states for 7 tabs (predictive is enabled now)
         Output("nav-intelligence", "active"),
         Output("nav-sniper-board", "active"),
         Output("nav-intraday-ml", "active"),
@@ -449,12 +450,13 @@ def register_callbacks(app, db_manager, scanner) -> None:
         Output("nav-paper", "active"),
         Output("nav-my-trades", "active"),
         Output("isr-previous-section", "data"),
-        # Inputs: 6 main tabs + global search + selected ticker
+        # Inputs: 7 main tabs + selected ticker
         Input("nav-intelligence", "n_clicks"),
         Input("nav-sniper-board", "n_clicks"),
         Input("nav-intraday-ml", "n_clicks"),
         Input("nav-intraday-sniper", "n_clicks"),
         Input("nav-options", "n_clicks"),
+        Input("nav-predictive", "n_clicks"),
         Input("nav-performance", "n_clicks"),
         Input("selected-ticker", "data"),
         State("active-nav", "data"),
@@ -462,14 +464,14 @@ def register_callbacks(app, db_manager, scanner) -> None:
         prevent_initial_call=False,
     )
     def toggle_main_nav(n_intel, n_sniper, n_ml, n_sniper_intra, n_options,
-                        n_perf, selected_ticker,
+                        n_predictive, n_perf, selected_ticker,
                         current_nav, prev_section):
         ctx = callback_context
-        NUM_MAIN = 4   # 4 physical section divs (intelligence, sniper, live-signals, performance)
-        NUM_NAV = 7    # 7 nav tabs (including disabled Predictive)
+        NUM_MAIN = 5   # 5 physical section divs (intelligence, sniper, live-signals, forecast, performance)
+        NUM_NAV = 7    # 7 nav tabs
         NUM_LEGACY = 9  # 9 legacy hidden sections
 
-        # Map nav IDs to section indices (0-3) + sub-tab auto-switch
+        # Map nav IDs to section indices (0-4) + sub-tab auto-switch
         # Intraday ML / Snipers / Options all map to live-signals (2) but with different sub-tabs
         section_map = {
             "nav-intelligence": 0,
@@ -477,7 +479,8 @@ def register_callbacks(app, db_manager, scanner) -> None:
             "nav-intraday-ml": 2,
             "nav-intraday-sniper": 2,
             "nav-options": 2,
-            "nav-performance": 3,
+            "nav-predictive": 3,
+            "nav-performance": 4,
         }
         # Which sub-tab to auto-select for each nav
         subtab_map = {
@@ -667,6 +670,7 @@ def register_callbacks(app, db_manager, scanner) -> None:
         Output("regime-status", "style"),
         Output("regime-description", "children"),
         Output("regime-banner", "className"),
+        Output("regime-pill", "className"),
         Input("refresh-interval", "n_intervals"),
     )
     def update_scanner_status(n):
@@ -760,13 +764,14 @@ def register_callbacks(app, db_manager, scanner) -> None:
                 )
         panel = html.Div(panel_children)
 
-        # Market regime banner — HMM-based
+        # Market regime banner — HMM-based.
+        # Tuple format: (label, color, description, banner_class, pill_class).
         _hmm_display = {
-            0: ("CRASH", "#ff4488", "All entries blocked", "kb-banner mb-4 kb-banner-risk-off"),
-            1: ("DISTRIBUTING", "#ff8c00", "SHORT only", "kb-banner mb-4 kb-banner-risk-off"),
-            2: ("ACCUMULATING", "#ffd43b", "LONG (tight stops)", "kb-banner mb-4 kb-banner-neutral"),
-            3: ("MEAN-REV", "#4da3ff", "LONG allowed", "kb-banner mb-4 kb-banner-neutral"),
-            4: ("TRENDING", "#00ff88", "LONG primary", "kb-banner mb-4 kb-banner-risk-on"),
+            0: ("CRASH",        "#ff4488", "All entries blocked", "kb-banner kb-banner-risk-off", "kb-status-pill bad"),
+            1: ("DISTRIBUTING", "#ff8c00", "SHORT only",          "kb-banner kb-banner-risk-off", "kb-status-pill bad"),
+            2: ("ACCUMULATING", "#ffd43b", "LONG (tight stops)",  "kb-banner kb-banner-neutral",  "kb-status-pill warn"),
+            3: ("MEAN-REV",     "#4da3ff", "LONG allowed",        "kb-banner kb-banner-neutral",  "kb-status-pill warn"),
+            4: ("TRENDING",     "#00ff88", "LONG primary",        "kb-banner kb-banner-risk-on",  "kb-status-pill ok"),
         }
         try:
             from signal_scanner.institutional_intel.intelligence.regime_hmm import DailyRegimeHMM
@@ -776,9 +781,9 @@ def register_callbacks(app, db_manager, scanner) -> None:
             if hmm._model is None:
                 raise RuntimeError("No HMM model")
             _state, _probs, _name = hmm.current_regime()
-            regime_display, regime_color, description, banner_style = _hmm_display.get(
-                _state, ("UNKNOWN", "#888", "", "kb-banner mb-4"))
-            regime_style = {"color": regime_color, "fontWeight": "bold", "fontSize": "14px"}
+            regime_display, regime_color, description, banner_style, pill_class = _hmm_display.get(
+                _state, ("UNKNOWN", "#888", "", "kb-banner", "kb-status-pill"))
+            regime_style = {"color": regime_color, "fontWeight": "700"}
         except Exception:
             # Fallback to old regime data
             regime_data = status.get("market_regime")
@@ -788,18 +793,24 @@ def register_callbacks(app, db_manager, scanner) -> None:
                 _old_colors = {"RISK_ON": "#00ff88", "RISK_OFF": "#ff4488", "NEUTRAL": cfg.accent_neutral}
                 regime_color = _old_colors.get(regime, "#888")
                 regime_display = regime.replace("_", " ")
-                regime_style = {"color": regime_color, "fontWeight": "bold", "fontSize": "14px"}
-                _old_banner = {"RISK_ON": "kb-banner mb-4 kb-banner-risk-on",
-                               "RISK_OFF": "kb-banner mb-4 kb-banner-risk-off",
-                               "NEUTRAL": "kb-banner mb-4 kb-banner-neutral"}
-                banner_style = _old_banner.get(regime, "kb-banner mb-4")
+                regime_style = {"color": regime_color, "fontWeight": "700"}
+                _old_banner = {"RISK_ON": "kb-banner kb-banner-risk-on",
+                               "RISK_OFF": "kb-banner kb-banner-risk-off",
+                               "NEUTRAL": "kb-banner kb-banner-neutral"}
+                banner_style = _old_banner.get(regime, "kb-banner")
+                _old_pill = {"RISK_ON": "kb-status-pill ok",
+                             "RISK_OFF": "kb-status-pill bad",
+                             "NEUTRAL": "kb-status-pill warn"}
+                pill_class = _old_pill.get(regime, "kb-status-pill")
             else:
                 regime_display = "LOADING..."
-                regime_style = {"color": "#888", "fontWeight": "bold", "fontSize": "14px"}
+                regime_style = {"color": "#888", "fontWeight": "700"}
                 description = ""
-                banner_style = "kb-banner mb-4"
+                banner_style = "kb-banner"
+                pill_class = "kb-status-pill"
 
-        return panel, dot_class, status_text, badge, regime_display, regime_style, description, banner_style
+        return (panel, dot_class, status_text, badge,
+                regime_display, regime_style, description, banner_style, pill_class)
 
     # ------------------------------------------------------------------
     # 5b. Time guard status banner
@@ -1453,3 +1464,98 @@ def register_callbacks(app, db_manager, scanner) -> None:
             raise PreventUpdate
 
         raise PreventUpdate
+
+    # ------------------------------------------------------------------
+    # 19. Terminal-dense status pills — readiness / EOD age / kill-switch
+    #     Pulls from readiness.json, latest EOD log mtime, and
+    #     paper_trader._kill_switch_blocked().
+    # ------------------------------------------------------------------
+    @app.callback(
+        Output("readiness-pill", "className"),
+        Output("readiness-pill-text", "children"),
+        Output("eod-age-pill", "className"),
+        Output("eod-age-pill-text", "children"),
+        Output("kill-switch-pill", "className"),
+        Output("kill-switch-pill-text", "children"),
+        Input("refresh-interval", "n_intervals"),
+        prevent_initial_call=False,
+    )
+    def update_status_pills(_n):
+        import json
+        from pathlib import Path
+
+        # --- Readiness pill ---
+        try:
+            readiness_path = Path("data/warehouse/readiness.json")
+            if readiness_path.exists():
+                data = json.loads(readiness_path.read_text())
+                status = (data.get("readiness_status") or "").upper()
+                if status == "READY":
+                    readiness_class = "kb-status-pill ok"
+                    readiness_text = "READY"
+                elif status == "DEGRADED":
+                    readiness_class = "kb-status-pill warn"
+                    readiness_text = "DEGRADED"
+                elif status == "BLOCKED":
+                    readiness_class = "kb-status-pill bad"
+                    readiness_text = "BLOCKED"
+                else:
+                    readiness_class = "kb-status-pill"
+                    readiness_text = status or "UNKNOWN"
+            else:
+                readiness_class = "kb-status-pill"
+                readiness_text = "NO READINESS"
+        except Exception:
+            readiness_class = "kb-status-pill"
+            readiness_text = "ERROR"
+
+        # --- EOD age pill ---
+        try:
+            eod_logs = sorted(
+                Path("logs").glob("eod_*.log"),
+                key=lambda p: p.stat().st_mtime,
+                reverse=True,
+            )
+            if eod_logs:
+                age_h = (datetime.now().timestamp() - eod_logs[0].stat().st_mtime) / 3600.0
+                if age_h < 4:
+                    eod_class = "kb-status-pill ok"
+                elif age_h < 30:
+                    eod_class = "kb-status-pill warn"
+                else:
+                    eod_class = "kb-status-pill bad"
+                if age_h < 1:
+                    eod_text = f"EOD {int(age_h * 60)}M"
+                elif age_h < 48:
+                    eod_text = f"EOD {age_h:.0f}H"
+                else:
+                    eod_text = f"EOD {age_h / 24:.0f}D"
+            else:
+                eod_class = "kb-status-pill bad"
+                eod_text = "EOD NONE"
+        except Exception:
+            eod_class = "kb-status-pill"
+            eod_text = "EOD --"
+
+        # --- Kill-switch pill ---
+        try:
+            pt = getattr(scanner, "_paper_trader", None)
+            if pt is not None and hasattr(pt, "_kill_switch_blocked"):
+                reason = pt._kill_switch_blocked()
+                if reason:
+                    kill_class = "kb-status-pill bad"
+                    # show short flag — full reason is in logs
+                    kill_text = "KILL ON"
+                else:
+                    kill_class = "kb-status-pill ok"
+                    kill_text = "KILL OFF"
+            else:
+                kill_class = "kb-status-pill"
+                kill_text = "KILL --"
+        except Exception:
+            kill_class = "kb-status-pill"
+            kill_text = "KILL --"
+
+        return (readiness_class, readiness_text,
+                eod_class, eod_text,
+                kill_class, kill_text)

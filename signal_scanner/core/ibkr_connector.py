@@ -63,9 +63,18 @@ class DataConnector:
         self._ibkr_attempted_ports: List[int] = []
         self._ibkr_attempted_client_ids: List[int] = []
         self._next_ibkr_retry_at: float = 0.0
-        self._ibkr_retry_cooldown_s: int = 300
+        # 30s cooldown matches the scheduler heartbeat — retry every tick.
+        # The previous 300s cooldown made cold-starts (user brings TWS up
+        # AFTER the scanner) feel broken because each retry sat idle for 5 min.
+        self._ibkr_retry_cooldown_s: int = 30
         self._liquid_hours_cache: Dict = {}  # keyed by YYYYMMDD date string
         self._contract_cache: Dict[str, Any] = {}  # symbol → qualified contract
+        # Session-conflict (Error 162 "different IP") tolerance — once we cross
+        # threshold we flip `_connected=False` so the heartbeat reconnects with
+        # a fresh clientId. Without this the system spams 162s indefinitely.
+        self._session_conflict_count: int = 0
+        self._session_conflict_threshold: int = 10
+        self._client_id_blacklist: set = set()
 
     # ------------------------------------------------------------------
     # Connection management
@@ -92,8 +101,16 @@ class DataConnector:
         seen = set()
         ports = [p for p in candidate_ports if not (p in seen or seen.add(p))]
         # Try requested clientId first, then a short fallback range for collisions.
-        candidate_client_ids = [self._ibkr_config.client_id]
-        candidate_client_ids.extend(self._ibkr_config.client_id + i for i in range(1, 6))
+        # Skip clientIds we've burned via Error 162 in this process lifetime.
+        base = self._ibkr_config.client_id
+        candidate_client_ids = [base + i for i in range(0, 10)
+                                if (base + i) not in self._client_id_blacklist]
+        if not candidate_client_ids:
+            # If everything is blacklisted, reset and start fresh — better to
+            # retry burned ids than fail outright.
+            logger.warning("All clientIds blacklisted — resetting and retrying")
+            self._client_id_blacklist.clear()
+            candidate_client_ids = [base + i for i in range(0, 10)]
         self._ibkr_attempted_ports = ports[:]
         self._ibkr_attempted_client_ids = candidate_client_ids[:]
         self._last_ibkr_error = ""
@@ -115,10 +132,12 @@ class DataConnector:
                         timeout=self._ibkr_config.timeout,
                     )
                     self._ib.disconnectedEvent += self._on_disconnect
+                    self._ib.errorEvent += self._on_error
                     self._connected = True
                     self._connected_port = port
                     self._connected_client_id = client_id
                     self._next_ibkr_retry_at = 0.0
+                    self._session_conflict_count = 0
                     logger.info(f"Connected to IBKR on port {port} (clientId={client_id})")
                     return True
                 except Exception as e:
@@ -151,6 +170,72 @@ class DataConnector:
         logger.warning("IBKR disconnected — scanner paused until reconnection")
         self._connected = False
         self._last_ibkr_error = "Disconnected event from IBKR session"
+        # Contracts and liquid hours may not survive the reconnect cleanly —
+        # drop caches so we re-qualify against the new session.
+        self._contract_cache.clear()
+        self._liquid_hours_cache.clear()
+        self._session_conflict_count = 0
+
+    def _on_error(self, reqId, errorCode, errorString, contract=None) -> None:
+        """Handle IBKR error events.
+
+        Some error codes indicate the session is broken even though
+        ``disconnectedEvent`` never fires.  When that happens we have to flip
+        ``_connected = False`` ourselves so the heartbeat reconnects.
+
+        Codes:
+          - 1100/1300/504/10182: connection lost
+          - 1101: restored, market data subscriptions lost (re-qualify)
+          - 1102: restored, data maintained (informational)
+          - 162: "different IP" / session-conflict.  A few are tolerable but
+                 sustained 162s mean the session is unusable — flip and reconnect
+                 on a fresh clientId after we cross threshold.
+        """
+        try:
+            code = int(errorCode)
+        except Exception:
+            return
+
+        if code in (1100, 1300, 504, 10182):
+            logger.warning(
+                f"IBKR connection error {code}: {errorString} — flagging disconnected"
+            )
+            self._connected = False
+            self._last_ibkr_error = f"errorCode {code}: {errorString}"
+            self._contract_cache.clear()
+            self._liquid_hours_cache.clear()
+        elif code == 1101:
+            logger.warning(
+                f"IBKR connectivity restored, data subs lost (1101): {errorString}"
+            )
+            self._contract_cache.clear()
+        elif code == 1102:
+            logger.info(f"IBKR connectivity restored, data maintained (1102): {errorString}")
+        elif code == 162:
+            self._session_conflict_count += 1
+            if self._session_conflict_count >= self._session_conflict_threshold:
+                burned = self._connected_client_id
+                if burned is not None:
+                    self._client_id_blacklist.add(burned)
+                logger.error(
+                    f"IBKR Error 162 threshold ({self._session_conflict_threshold}) "
+                    f"crossed — session unusable on clientId={burned}. "
+                    f"Forcing reconnect with a different clientId. msg='{errorString}'"
+                )
+                self._connected = False
+                self._last_ibkr_error = (
+                    f"errorCode 162 (session conflict, clientId={burned}): {errorString}"
+                )
+                self._contract_cache.clear()
+                self._liquid_hours_cache.clear()
+                self._session_conflict_count = 0
+                # Also try to disconnect the broken IB instance so the next
+                # connect_ibkr() starts cleanly.
+                if self._ib is not None:
+                    try:
+                        self._ib.disconnect()
+                    except Exception:
+                        pass
 
     def disconnect(self) -> None:
         """Gracefully disconnect from IBKR."""

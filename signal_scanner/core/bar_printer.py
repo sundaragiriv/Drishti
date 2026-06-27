@@ -80,29 +80,46 @@ class BarPrinter:
         return self._thread is not None and self._thread.is_alive()
 
     def _run_loop(self) -> None:
-        """Main loop: connect IBKR, then cycle fetch→sleep→fetch."""
+        """Main loop: ensure IBKR connection, then cycle fetch→sleep→fetch.
+
+        Stays alive even if IBKR isn't reachable at startup — keeps retrying
+        every 30s until it connects, then runs the bar fetch loop.  If the
+        connection drops mid-session, falls back to the retry path instead of
+        exiting the thread.
+        """
         # Create own IBKR connection on this thread (own event loop)
         from signal_scanner.core.ibkr_connector import DataConnector
         self._connector = DataConnector(self._ibkr_config)
 
-        ok = self._connector.connect_ibkr()
-        if not ok:
-            logger.error("BarPrinter: IBKR connection failed — thread exiting")
-            self._store.update_health("bar_printer", errors=1,
-                                      notes="IBKR_CONNECT_FAILED")
-            return
-
-        logger.info("BarPrinter: IBKR connected (clientId={})",
-                     self._connector._connected_client_id)
-
+        connect_logged = False
         while not self._stop_event.is_set():
+            if not self._connector.is_connected():
+                ok = self._connector.connect_ibkr()
+                if not ok:
+                    if not connect_logged:
+                        logger.warning(
+                            "BarPrinter: IBKR not reachable — will retry every 30s"
+                        )
+                        connect_logged = True
+                    self._store.update_health(
+                        "bar_printer", errors=1, notes="IBKR_CONNECT_RETRY"
+                    )
+                    self._stop_event.wait(timeout=30)
+                    continue
+                logger.info(
+                    "BarPrinter: IBKR connected (clientId={})",
+                    self._connector._connected_client_id,
+                )
+                connect_logged = False
+
             cycle_start = time.monotonic()
             try:
                 self.run_cycle(self._symbols, budget_seconds=self.BUDGET_SECONDS)
             except Exception as e:
                 logger.warning("BarPrinter cycle error: {}", e)
-                self._store.update_health("bar_printer", errors=1,
-                                          notes=str(e)[:100])
+                self._store.update_health(
+                    "bar_printer", errors=1, notes=str(e)[:100]
+                )
 
             # Wall-clock cadence: wait until next scheduled time, not after
             elapsed = time.monotonic() - cycle_start
@@ -111,7 +128,8 @@ class BarPrinter:
 
         # Cleanup
         try:
-            self._connector._ib.disconnect()
+            if self._connector and self._connector._ib is not None:
+                self._connector._ib.disconnect()
         except Exception:
             pass
 

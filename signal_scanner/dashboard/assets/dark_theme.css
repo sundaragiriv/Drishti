@@ -333,13 +333,16 @@ h5 { font-size: 0.95rem !important; }
 .kb-banner {
     background-color: var(--kb-card);
     border: 1px solid var(--kb-border);
-    border-radius: var(--kb-radius);
-    padding: 12px 24px;
+    border-radius: var(--kb-radius-sm);
+    padding: 8px 14px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 16px;
+    gap: 16px;
+    margin-bottom: 14px;
     transition: var(--kb-transition);
+    flex-wrap: wrap;
+    min-height: 38px;
 }
 
 .kb-banner:hover {
@@ -660,6 +663,31 @@ h5 { font-size: 0.95rem !important; }
     line-height: 1.4 !important;
 }
 
+/* dbc.Tooltip (Bootstrap) — used by per-page "Rules for taking a trade"
+   badges. The dbc theme default renders too light/low-contrast, so force a
+   dark, readable box that matches .dash-table-tooltip above. */
+.tooltip.show {
+    opacity: 1 !important;
+}
+.tooltip-inner {
+    background-color: var(--kb-card) !important;
+    color: var(--kb-text) !important;
+    border: 1px solid #30363d !important;
+    border-radius: 8px !important;
+    padding: 10px 12px !important;
+    max-width: 470px !important;
+    text-align: left !important;
+    font-size: 0.78rem !important;
+    line-height: 1.5 !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55) !important;
+}
+.tooltip .tooltip-arrow::before {
+    border-top-color: var(--kb-card) !important;
+    border-bottom-color: var(--kb-card) !important;
+    border-left-color: var(--kb-card) !important;
+    border-right-color: var(--kb-card) !important;
+}
+
 /* ---- 15. SCROLLBAR ---- */
 .dash-spreadsheet ::-webkit-scrollbar {
     width: 8px;
@@ -839,4 +867,233 @@ h5 { font-size: 0.95rem !important; }
     .kb-stat-card .kb-stat-value {
         font-size: 1.3rem;
     }
+}
+
+/* ============================================================
+   TRADING-TERMINAL DENSE LAYER (2026-05-07)
+   Status pills (T1) + tabular numbers / conviction bars (T2) +
+   density polish (T3). Layered on top of Kubera base.
+   ============================================================ */
+
+/* ---- T1: Status pills (readiness / EOD / kill-switch) ---- */
+.kb-status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-family: var(--kb-font-mono);
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    border: 1px solid var(--kb-border);
+    background: var(--kb-card-elevated);
+    color: var(--kb-text-muted);
+    line-height: 1;
+}
+.kb-status-pill .kb-pill-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--kb-text-muted);
+    display: inline-block;
+    flex-shrink: 0;
+}
+.kb-status-pill.ok    { color: var(--kb-long); border-color: rgba(0, 210, 106, 0.45); }
+.kb-status-pill.ok    .kb-pill-dot { background: var(--kb-long); box-shadow: 0 0 6px var(--kb-long); }
+.kb-status-pill.warn  { color: var(--kb-neutral); border-color: rgba(255, 193, 7, 0.45); }
+.kb-status-pill.warn  .kb-pill-dot { background: var(--kb-neutral); }
+.kb-status-pill.bad   { color: var(--kb-short); border-color: rgba(255, 0, 110, 0.45); }
+.kb-status-pill.bad   .kb-pill-dot { background: var(--kb-short); box-shadow: 0 0 6px var(--kb-short); }
+
+/* Banner: gather pills in a tight row */
+.kb-banner-pills {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+/* Status pill internal structure — KEY value */
+.kb-status-pill .kb-pill-key {
+    color: var(--kb-text-muted);
+    font-weight: 500;
+    letter-spacing: 0.08em;
+}
+.kb-status-pill .kb-pill-val {
+    font-weight: 700;
+    letter-spacing: 0.04em;
+}
+.kb-status-pill.ok    .kb-pill-key { color: rgba(0, 210, 106, 0.7); }
+.kb-status-pill.warn  .kb-pill-key { color: rgba(255, 193, 7, 0.7); }
+.kb-status-pill.bad   .kb-pill-key { color: rgba(255, 0, 110, 0.7); }
+
+/* Banner: schedule meta strip (right side, secondary info) */
+.kb-banner-schedule {
+    display: inline-flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin-left: auto;
+}
+.kb-banner-schedule .kb-meta-item {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 4px;
+    font-family: var(--kb-font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.04em;
+}
+.kb-banner-schedule .kb-meta-key {
+    color: var(--kb-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 0.68rem;
+}
+.kb-banner-schedule .kb-meta-val {
+    color: var(--kb-text);
+    font-weight: 700;
+}
+
+/* Section header — tighter, more terminal feel */
+.kb-section-header {
+    padding: 12px 0 12px 0 !important;
+    margin-bottom: 12px !important;
+}
+.kb-section-header h2 {
+    font-size: 1.25rem !important;
+    margin-bottom: 4px !important;
+}
+.kb-section-desc {
+    font-size: 0.78rem !important;
+}
+
+/* Uniform filter pills (ALL / LONG / SHORT) — override Bootstrap
+   btn-primary vs btn-outline-secondary so all 3 buttons render at the
+   exact same size; only color changes between active/inactive. */
+.kb-radio-pills .btn-check + .btn,
+.kb-radio-pills .btn-check + .btn-outline-secondary,
+.kb-radio-pills .btn-check:checked + .btn,
+.kb-radio-pills .btn-check:checked + .btn-primary {
+    min-width: 64px;
+    padding: 5px 14px !important;
+    font-size: 0.74rem !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    border-radius: 14px !important;
+    border-width: 1px !important;
+    line-height: 1.4 !important;
+    background-color: transparent !important;
+    color: var(--kb-text-muted) !important;
+    border-color: var(--kb-border) !important;
+    transition: var(--kb-transition);
+    box-shadow: none !important;
+    font-family: var(--kb-font-mono) !important;
+}
+.kb-radio-pills .btn-check + .btn:hover {
+    color: var(--kb-text) !important;
+    border-color: var(--kb-gold-dim) !important;
+    background-color: rgba(212, 160, 23, 0.05) !important;
+}
+.kb-radio-pills .btn-check:checked + .btn,
+.kb-radio-pills .btn-check:checked + .btn-primary {
+    background-color: var(--kb-gold) !important;
+    color: var(--kb-bg) !important;
+    border-color: var(--kb-gold) !important;
+}
+
+/* Clickable KPI chips — same look as before, with cursor + hover lift */
+.kb-kpi-chip {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    border-radius: 6px;
+    border: 1px solid var(--kb-border);
+    background: var(--kb-card-elevated);
+    transition: var(--kb-transition);
+    -webkit-user-select: none;
+    user-select: none;
+}
+.kb-kpi-chip.clickable {
+    cursor: pointer;
+}
+.kb-kpi-chip.clickable:hover {
+    border-color: var(--kb-gold-dim);
+    background: rgba(212, 160, 23, 0.06);
+    transform: translateY(-1px);
+}
+.kb-kpi-chip.active {
+    border-color: var(--kb-gold);
+    background: rgba(212, 160, 23, 0.10);
+    box-shadow: 0 0 0 1px rgba(212, 160, 23, 0.25);
+}
+.kb-kpi-chip .kb-kpi-label {
+    font-size: 0.65rem;
+    color: var(--kb-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 600;
+}
+.kb-kpi-chip .kb-kpi-val {
+    font-size: 0.92rem;
+    font-weight: 800;
+    font-family: var(--kb-font-mono);
+    line-height: 1;
+}
+
+/* ---- T2: Tabular numbers everywhere ---- */
+.dash-table-container .dash-cell-value,
+.dash-table-container .dash-spreadsheet-container .dash-spreadsheet-inner td,
+.dash-table-container .dash-spreadsheet-container .dash-spreadsheet-inner th,
+.kb-table td,
+.kb-table th,
+table.dataTable td,
+table.dataTable th,
+.kb-stat-value,
+.kb-mono {
+    font-variant-numeric: tabular-nums !important;
+    font-feature-settings: "tnum" 1 !important;
+}
+
+/* ---- T2: Conviction / ML score bar ---- */
+.kb-conv-bar {
+    display: inline-block;
+    height: 6px;
+    width: 56px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 3px;
+    overflow: hidden;
+    vertical-align: middle;
+    margin-right: 6px;
+    position: relative;
+}
+.kb-conv-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.3s ease;
+}
+.kb-conv-bar-fill.tier-high { background: var(--kb-long); box-shadow: 0 0 4px rgba(0,210,106,0.5); }
+.kb-conv-bar-fill.tier-mid  { background: var(--kb-neutral); }
+.kb-conv-bar-fill.tier-low  { background: var(--kb-short); opacity: 0.6; }
+
+/* ---- T3: Density polish — tighter tables ---- */
+.dash-table-container .dash-spreadsheet-container .dash-spreadsheet-inner table {
+    font-size: 0.78rem !important;
+}
+.dash-table-container .dash-cell {
+    padding: 5px 8px !important;
+    line-height: 1.35 !important;
+}
+.dash-table-container th.dash-header,
+.dash-table-container .dash-header {
+    padding: 7px 8px !important;
+}
+.dash-table-container .dash-spreadsheet-container .dash-spreadsheet-inner tr {
+    height: auto !important;
+}
+/* Slightly tighter card chrome to match terminal feel */
+.kb-card .card-body,
+.kb-card-body {
+    padding: 14px 16px !important;
 }
