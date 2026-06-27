@@ -1,0 +1,325 @@
+/* ============================================================
+   DRISHTI v2 — REFINED VISUAL LAYER
+   Loaded after dark_theme.css (alphabetical: d > dark? no — Dash loads
+   /assets in lexicographic order, so this file's name controls cascade).
+   --kb-* legacy vars are re-assigned to new --dr-* tokens so legacy
+   selectors automatically pick up the refreshed palette.
+   ============================================================ */
+
+:root {
+    /* Refined palette — warmer near-black, premium amber-400 gold,
+       sophisticated emerald + rose for direction. */
+    --dr-bg:               #0a0a0e;
+    --dr-bg-elevated:      #14141a;
+    --dr-card:             #161620;
+    --dr-card-elevated:    #1c1c28;
+    --dr-card-hover:       #20202e;
+    --dr-text:             #f4f4f5;
+    --dr-text-secondary:   #a1a1aa;
+    --dr-text-muted:       #71717a;
+    --dr-border:           #27272e;
+    --dr-border-strong:    #3f3f46;
+
+    --dr-gold:             #fbbf24;
+    --dr-gold-bright:      #fcd34d;
+    --dr-gold-dim:         rgba(251, 191, 36, 0.12);
+    --dr-gold-glow:        rgba(251, 191, 36, 0.22);
+
+    --dr-long:             #10b981;
+    --dr-long-bright:      #34d399;
+    --dr-long-dim:         rgba(16, 185, 129, 0.12);
+
+    --dr-short:            #f43f5e;
+    --dr-short-bright:     #fb7185;
+    --dr-short-dim:        rgba(244, 63, 94, 0.12);
+
+    --dr-neutral:          #f59e0b;
+    --dr-info:             #38bdf8;
+
+    --dr-font-display:     "Space Grotesk", "Inter", sans-serif;
+    --dr-font-body:        "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --dr-font-mono:        "JetBrains Mono", "Fira Code", "Consolas", monospace;
+
+    --dr-radius:           12px;
+    --dr-radius-sm:        8px;
+    --dr-radius-lg:        16px;
+
+    --dr-shadow-sm:        0 1px 2px rgba(0,0,0,0.4);
+    --dr-shadow-md:        0 4px 16px rgba(0,0,0,0.4);
+    --dr-shadow-lg:        0 12px 36px rgba(0,0,0,0.5);
+    --dr-shadow-gold:      0 0 24px rgba(251,191,36,0.18);
+
+    /* Override legacy --kb-* so all existing styles pick up the new palette */
+    --kb-bg:               var(--dr-bg);
+    --kb-card:             var(--dr-card);
+    --kb-card-elevated:    var(--dr-card-elevated);
+    --kb-text:             var(--dr-text);
+    --kb-text-muted:       var(--dr-text-muted);
+    --kb-border:           var(--dr-border);
+    --kb-gold:             var(--dr-gold);
+    --kb-gold-light:       var(--dr-gold-bright);
+    --kb-gold-dim:         var(--dr-gold-dim);
+    --kb-gold-glow:        var(--dr-gold-glow);
+    --kb-long:             var(--dr-long);
+    --kb-short:            var(--dr-short);
+    --kb-neutral:          var(--dr-neutral);
+}
+
+/* ---- Base body — radial vignette + subtle font feature settings ---- */
+body {
+    background: radial-gradient(ellipse at top, #15151c 0%, var(--dr-bg) 60%) !important;
+    background-attachment: fixed !important;
+    color: var(--dr-text) !important;
+    font-feature-settings: "ss01", "cv11";
+}
+
+/* ---- Navbar polish — glass effect + sharper brand typography ---- */
+.kb-navbar {
+    background: rgba(10, 10, 14, 0.85) !important;
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border-bottom: 1px solid var(--dr-border) !important;
+    box-shadow: 0 1px 0 rgba(255,255,255,0.02), 0 8px 24px rgba(0,0,0,0.25) !important;
+    padding: 8px 0 !important;
+}
+
+.kb-navbar .navbar-brand,
+.kb-navbar .nav-link {
+    font-family: var(--dr-font-display);
+}
+
+.kb-navbar .nav-link {
+    font-weight: 500 !important;
+    letter-spacing: 0.02em !important;
+    color: var(--dr-text-secondary) !important;
+    padding: 6px 14px !important;
+    border-radius: 8px !important;
+    transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.kb-navbar .nav-link:hover {
+    color: var(--dr-text) !important;
+    background: rgba(255,255,255,0.04) !important;
+}
+
+.kb-navbar .nav-link.active {
+    color: var(--dr-gold) !important;
+    background: var(--dr-gold-dim) !important;
+}
+
+/* ---- Section headers ---- */
+.kb-section-header h2 {
+    font-family: var(--dr-font-display) !important;
+    letter-spacing: -0.015em !important;
+    color: var(--dr-text) !important;
+}
+
+/* ---- Cards — softer borders, hover lift ---- */
+.kb-card {
+    background: var(--dr-card) !important;
+    border: 1px solid var(--dr-border) !important;
+    border-radius: var(--dr-radius) !important;
+    box-shadow: var(--dr-shadow-md) !important;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease !important;
+}
+
+.kb-card:hover {
+    border-color: var(--dr-border-strong) !important;
+    box-shadow: var(--dr-shadow-lg) !important;
+}
+
+/* ---- KPI / stat tiles refresh ---- */
+.kb-stat-card, .kb-kpi-chip {
+    background: var(--dr-card) !important;
+    border: 1px solid var(--dr-border) !important;
+    border-radius: var(--dr-radius-sm) !important;
+}
+
+.kb-stat-card:hover {
+    border-color: var(--dr-gold-dim) !important;
+    transform: translateY(-1px) !important;
+}
+
+/* ---- Buttons ---- */
+.btn {
+    border-radius: var(--dr-radius-sm) !important;
+    font-weight: 500 !important;
+    letter-spacing: 0.01em !important;
+    transition: all 0.18s ease !important;
+}
+
+.btn-success {
+    background: var(--dr-long) !important;
+    border-color: var(--dr-long) !important;
+}
+.btn-success:hover { background: var(--dr-long-bright) !important; }
+
+/* ---- Phosphor icon sizing default ---- */
+.ph, .ph-fill, .ph-duotone, [class^="ph-"], [class*=" ph-"] {
+    font-size: 1.05em;
+    vertical-align: -2px;
+}
+
+/* ---- Drishti regime card — replaces the row of pills ---- */
+.dr-regime-card {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    padding: 14px 20px;
+    background: linear-gradient(135deg, var(--dr-card-elevated) 0%, var(--dr-card) 100%);
+    border: 1px solid var(--dr-border);
+    border-left: 4px solid var(--dr-gold);
+    border-radius: var(--dr-radius);
+    box-shadow: var(--dr-shadow-md);
+    margin-bottom: 18px;
+}
+.dr-regime-card.regime-crash       { border-left-color: var(--dr-short); }
+.dr-regime-card.regime-distribute  { border-left-color: var(--dr-neutral); }
+.dr-regime-card.regime-accumulate  { border-left-color: var(--dr-gold); }
+.dr-regime-card.regime-mean-rev    { border-left-color: var(--dr-info); }
+.dr-regime-card.regime-bull        { border-left-color: var(--dr-long); }
+
+.dr-regime-icon {
+    width: 48px; height: 48px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 50%;
+    background: var(--dr-bg-elevated);
+    font-size: 1.6rem;
+}
+.dr-regime-body { flex: 1; min-width: 0; }
+.dr-regime-label {
+    font-family: var(--dr-font-display);
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--dr-text-muted);
+    margin-bottom: 2px;
+}
+.dr-regime-state {
+    font-family: var(--dr-font-display);
+    font-size: 1.4rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    line-height: 1.1;
+    color: var(--dr-text);
+}
+.dr-regime-guidance {
+    color: var(--dr-text-secondary);
+    font-size: 0.82rem;
+    margin-top: 4px;
+}
+.dr-regime-side-chips {
+    display: flex; gap: 10px; align-items: center;
+    flex-wrap: wrap;
+}
+.dr-side-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-family: var(--dr-font-mono);
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+}
+.dr-side-chip.allowed {
+    background: var(--dr-long-dim);
+    color: var(--dr-long-bright);
+    border: 1px solid var(--dr-long-dim);
+}
+.dr-side-chip.blocked {
+    background: var(--dr-short-dim);
+    color: var(--dr-short-bright);
+    border: 1px solid var(--dr-short-dim);
+    opacity: 0.65;
+}
+
+/* ---- "Why?" tag badges ---- */
+.dr-why-tags {
+    display: inline-flex; gap: 4px; flex-wrap: wrap; align-items: center;
+}
+.dr-why-tag {
+    display: inline-flex; align-items: center; gap: 3px;
+    padding: 2px 7px;
+    border-radius: 4px;
+    font-family: var(--dr-font-mono);
+    font-size: 0.66rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    line-height: 1.5;
+}
+.dr-why-tag.tag-director { background: rgba(251,191,36,0.14); color: var(--dr-gold-bright); border: 1px solid rgba(251,191,36,0.3); }
+.dr-why-tag.tag-13f      { background: rgba(56,189,248,0.14); color: var(--dr-info);        border: 1px solid rgba(56,189,248,0.3); }
+.dr-why-tag.tag-accum    { background: rgba(16,185,129,0.14); color: var(--dr-long-bright); border: 1px solid rgba(16,185,129,0.3); }
+.dr-why-tag.tag-squeeze  { background: rgba(245,158,11,0.14); color: var(--dr-neutral);     border: 1px solid rgba(245,158,11,0.3); }
+.dr-why-tag.tag-triple   { background: rgba(251,191,36,0.20); color: #fde68a;               border: 1px solid var(--dr-gold); }
+
+/* ---- Equity-curve mini header card ---- */
+.dr-equity-card {
+    display: flex; align-items: center; gap: 16px;
+    padding: 10px 16px;
+    background: linear-gradient(135deg, var(--dr-card) 0%, var(--dr-card-elevated) 100%);
+    border: 1px solid var(--dr-border);
+    border-radius: var(--dr-radius-sm);
+}
+.dr-equity-label {
+    font-family: var(--dr-font-display);
+    font-size: 0.66rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--dr-text-muted);
+}
+.dr-equity-value {
+    font-family: var(--dr-font-mono);
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--dr-text);
+    letter-spacing: -0.01em;
+}
+.dr-equity-goal {
+    font-family: var(--dr-font-mono);
+    font-size: 0.72rem;
+    color: var(--dr-gold);
+}
+
+/* ---- Director-cluster intel card ---- */
+.dr-edge-card {
+    background: var(--dr-card-elevated);
+    border: 1px solid var(--dr-border);
+    border-left: 3px solid var(--dr-gold);
+    border-radius: var(--dr-radius-sm);
+    padding: 12px 14px;
+    transition: all 0.2s ease;
+}
+.dr-edge-card:hover {
+    border-left-color: var(--dr-gold-bright);
+    background: var(--dr-card-hover);
+    transform: translateY(-1px);
+}
+.dr-edge-ticker {
+    font-family: var(--dr-font-mono);
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--dr-text);
+    letter-spacing: -0.01em;
+}
+.dr-edge-meta {
+    font-size: 0.74rem;
+    color: var(--dr-text-muted);
+    margin-top: 2px;
+}
+.dr-edge-stat {
+    font-family: var(--dr-font-mono);
+    font-weight: 600;
+    color: var(--dr-gold);
+}
+
+/* ---- Subtle fade-up on load ---- */
+@keyframes dr-fade-in {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+.dr-fade-in {
+    animation: dr-fade-in 0.42s cubic-bezier(0.4, 0, 0.2, 1) both;
+}

@@ -292,10 +292,94 @@ def build_main_layout() -> html.Div:
             html.Div(
                 className="kb-page-content",
                 children=[
-                    # ---- TERMINAL STATUS BAR ----
-                    # Single-row, terminal-aligned. Status pills (left) carry
-                    # the at-a-glance "can I trade today?" answer. Schedule
-                    # info (right) is muted secondary detail.
+                    # ============================================================
+                    # DRISHTI v2 — HERO STATUS ROW (regime + Road to 10M)
+                    # The first thing the eye lands on. Bigger, clearer than the
+                    # legacy pill row that lives below (kept for status detail).
+                    # ============================================================
+                    html.Div(
+                        className="dr-fade-in",
+                        style={"display": "grid",
+                               "gridTemplateColumns": "minmax(0, 2.4fr) minmax(0, 1fr)",
+                               "gap": "14px",
+                               "marginBottom": "16px"},
+                        children=[
+                            # Regime card (left, dominant)
+                            html.Div(
+                                id="dr-regime-card",
+                                className="dr-regime-card regime-accumulate",
+                                children=[
+                                    html.Div(
+                                        html.I(id="dr-regime-icon",
+                                               className="ph-duotone ph-eye",
+                                               style={"color": "#fbbf24"}),
+                                        className="dr-regime-icon",
+                                    ),
+                                    html.Div(
+                                        className="dr-regime-body",
+                                        children=[
+                                            html.Div("MARKET REGIME",
+                                                     className="dr-regime-label"),
+                                            html.Div("—",
+                                                     id="dr-regime-state",
+                                                     className="dr-regime-state"),
+                                            html.Div("Loading…",
+                                                     id="dr-regime-guidance",
+                                                     className="dr-regime-guidance"),
+                                        ],
+                                    ),
+                                    html.Div(
+                                        id="dr-regime-chips",
+                                        className="dr-regime-side-chips",
+                                    ),
+                                ],
+                            ),
+                            # Road to 10M equity tracker (right)
+                            html.Div(
+                                id="dr-equity-card",
+                                className="dr-equity-card",
+                                style={"flexDirection": "column",
+                                       "alignItems": "stretch", "gap": "6px"},
+                                children=[
+                                    html.Div(
+                                        style={"display": "flex",
+                                               "justifyContent": "space-between",
+                                               "alignItems": "baseline"},
+                                        children=[
+                                            html.Span("ROAD TO 10M",
+                                                      className="dr-equity-label"),
+                                            html.Span("—",
+                                                      id="dr-equity-pct-of-goal",
+                                                      className="dr-equity-goal"),
+                                        ],
+                                    ),
+                                    html.Div(
+                                        style={"display": "flex",
+                                               "justifyContent": "space-between",
+                                               "alignItems": "baseline"},
+                                        children=[
+                                            html.Span("$0",
+                                                      id="dr-equity-value",
+                                                      className="dr-equity-value"),
+                                            html.Span("—",
+                                                      id="dr-equity-delta",
+                                                      style={"fontFamily": "var(--dr-font-mono)",
+                                                             "fontSize": "0.78rem",
+                                                             "color": "var(--dr-text-muted)"}),
+                                        ],
+                                    ),
+                                    dcc.Graph(
+                                        id="dr-equity-spark",
+                                        config={"displayModeBar": False,
+                                                "staticPlot": True},
+                                        style={"height": "44px", "marginTop": "2px"},
+                                    ),
+                                ],
+                            ),
+                        ],
+                    ),
+
+                    # ---- LEGACY TERMINAL STATUS BAR (kept for status detail) ----
                     html.Div(
                         id="regime-banner",
                         className="kb-banner",

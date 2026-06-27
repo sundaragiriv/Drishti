@@ -251,6 +251,16 @@ def register_sniper_callbacks(app, db_manager, scanner=None) -> None:
             from signal_scanner.core.live_bar_store import LiveBarStore
             store = LiveBarStore()
             ideas = _load_sniper_ideas(conn, store)
+            # Drishti v2: tag rows with their slow-edge source ("Why is this here?")
+            try:
+                from signal_scanner.dashboard.director_clusters import (
+                    get_cluster_tickers_in_window,
+                )
+                director_set = get_cluster_tickers_in_window()
+            except Exception:
+                director_set = set()
+            for idea in ideas:
+                idea["why_tags"] = _build_why_tags(idea, director_set)
             # Daily revalidation — compute fast status on top of slow thesis
             from signal_scanner.paper.idea_revalidator import revalidate_all_ideas
             ideas = revalidate_all_ideas(conn, ideas)
@@ -982,6 +992,32 @@ def register_sniper_callbacks(app, db_manager, scanner=None) -> None:
                      if with_regime_total else "N/A")
 
         return breakdown, overall_wr, regime_wr, pf
+
+
+def _build_why_tags(idea: dict, director_set: set) -> str:
+    """Compose a compact 'why is this on the board?' tag string per row.
+
+    DIR    : ticker is inside a recent Director-led insider cluster (validated edge)
+    TRIPLE : Triple Lock (highest-conviction setup)
+    SQ     : squeeze candidate (high squeeze_score)
+    ACCUM  : institutional accumulation phase (EARLY/ACTIVE/LATE_ACCUM)
+    13F    : institutional thesis row (all sniper-board rows come from 13F intel)
+    """
+    tags = []
+    tkr = idea.get("symbol", "")
+    if tkr and tkr in director_set:
+        tags.append("DIR")
+    src = str(idea.get("source_badge", "")).upper()
+    if src == "TRIPLE_LOCK":
+        tags.append("TRIPLE")
+    if src == "SQUEEZE":
+        tags.append("SQ")
+    phase = str(idea.get("_phase") or "").upper()
+    if "ACCUM" in phase:
+        tags.append("ACCUM")
+    # Every sniper-board row is built off 13F institutional intelligence
+    tags.append("13F")
+    return " · ".join(tags)
 
 
 def _load_sniper_ideas(conn, store=None) -> list[dict]:

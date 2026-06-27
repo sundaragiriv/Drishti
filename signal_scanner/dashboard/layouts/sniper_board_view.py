@@ -37,6 +37,7 @@ SNIPER_COLUMNS = [
     {"name": "R:R", "id": "rr_ratio", "type": "numeric"},
     {"name": "Conv", "id": "_conviction", "type": "numeric"},
     {"name": "Source", "id": "source_badge"},
+    {"name": "Why", "id": "why_tags"},
     {"name": "Confirmed", "id": "convergence"},
     {"name": "Pressure", "id": "flow", "type": "numeric"},
     {"name": "Fresh", "id": "thesis_freshness", "type": "numeric"},
@@ -184,6 +185,51 @@ def build_sniper_board_layout() -> html.Div:
                 n_intervals=0,
             ),
 
+            # ============================================================
+            # DIRECTOR-CLUSTER WATCHLIST  (the validated edge surface)
+            # 40-60d Director-led drift: +5.93% / 55.8% win vs 2.86% baseline.
+            # Source of truth: pond_trigger_backtest.py --pond-alone.
+            # ============================================================
+            html.Div(
+                className="kb-card dr-fade-in",
+                style={"marginBottom": "16px"},
+                children=[
+                    html.Div(
+                        style={"display": "flex", "alignItems": "center",
+                               "gap": "10px", "marginBottom": "10px",
+                               "padding": "0 4px"},
+                        children=[
+                            html.I(className="ph-duotone ph-binoculars",
+                                   style={"color": "#fbbf24", "fontSize": "16px"}),
+                            html.Span("DIRECTOR-CLUSTER WATCHLIST",
+                                      style={"fontFamily": "var(--dr-font-display)",
+                                             "fontWeight": "700",
+                                             "letterSpacing": "0.10em",
+                                             "fontSize": "0.78rem",
+                                             "color": "var(--dr-gold)"}),
+                            html.Span(
+                                "Smart money is buying these · 40–60d hold window",
+                                style={"fontSize": "0.74rem",
+                                       "color": "var(--dr-text-muted)",
+                                       "fontStyle": "italic"},
+                            ),
+                            html.Span(id="dr-clusters-summary",
+                                      style={"fontSize": "0.74rem",
+                                             "color": "var(--dr-text-secondary)",
+                                             "marginLeft": "auto",
+                                             "fontFamily": "var(--dr-font-mono)"}),
+                        ],
+                    ),
+                    html.Div(
+                        id="dr-clusters-grid",
+                        style={"display": "grid",
+                               "gridTemplateColumns": "repeat(auto-fill, minmax(180px, 1fr))",
+                               "gap": "10px"},
+                        children=[],
+                    ),
+                ],
+            ),
+
             # ---- THE ANSWER — top 10 setups, the actionable list ----
             html.Div(
                 className="kb-card",
@@ -295,6 +341,17 @@ def build_sniper_board_layout() -> html.Div:
                             {"if": {"filter_query": '{price_source} = "EOD"',
                                     "column_id": "price_source"},
                              "color": "#888"},
+                            # "Why" — base muted look
+                            {"if": {"column_id": "why_tags"},
+                             "color": "#a1a1aa", "fontSize": "0.74rem",
+                             "letterSpacing": "0.04em", "fontWeight": "600"},
+                            # DIR present = the validated edge (Director cluster)
+                            {"if": {"filter_query": '{why_tags} contains "DIR"',
+                                    "column_id": "why_tags"},
+                             "color": "#fbbf24", "fontWeight": "700"},
+                            {"if": {"filter_query": '{why_tags} contains "TRIPLE"',
+                                    "column_id": "why_tags"},
+                             "color": "#fde68a", "fontWeight": "700"},
                             # Symbol clickable
                             {"if": {"column_id": "symbol"},
                              "color": "#4da3ff", "cursor": "pointer",

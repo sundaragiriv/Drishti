@@ -1335,6 +1335,10 @@ def main() -> None:
         from signal_scanner.dashboard.forecast_callbacks import register_forecast_callbacks
         register_forecast_callbacks(app)
 
+        # Drishti v2 hero callbacks (regime card + Road-to-10M tracker)
+        from signal_scanner.dashboard.drishti_callbacks import register_drishti_callbacks
+        register_drishti_callbacks(app)
+
         dash_cfg = DashboardConfig()
         port = args.port or dash_cfg.port
         logger.info(f"Dashboard available at http://{dash_cfg.host}:{port}")
