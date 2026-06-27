@@ -125,16 +125,35 @@ def build_main_layout() -> html.Div:
                         fluid=True,
                         children=[
                             dbc.NavbarBrand(
-                                "KUBERA",
+                                html.Div(
+                                    [
+                                        html.Div(
+                                            "DRISHTI",
+                                            style={
+                                                "fontWeight": "800",
+                                                "fontSize": "1.1rem",
+                                                "letterSpacing": "0.15em",
+                                                "color": "#fff",
+                                                "fontFamily": "'JetBrains Mono', monospace",
+                                                "lineHeight": "1",
+                                            },
+                                        ),
+                                        html.Div(
+                                            "Road to 10 Million",
+                                            style={
+                                                "fontSize": "0.62rem",
+                                                "color": "#ffd43b",
+                                                "letterSpacing": "0.10em",
+                                                "marginTop": "2px",
+                                                "fontWeight": "500",
+                                                "textTransform": "uppercase",
+                                            },
+                                        ),
+                                    ],
+                                    style={"display": "flex", "flexDirection": "column"},
+                                ),
                                 className="me-auto",
-                                style={
-                                    "cursor": "default",
-                                    "fontWeight": "800",
-                                    "fontSize": "1.1rem",
-                                    "letterSpacing": "0.15em",
-                                    "color": "#fff",
-                                    "fontFamily": "'JetBrains Mono', monospace",
-                                },
+                                style={"cursor": "default"},
                             ),
                             dbc.Nav(
                                 [
@@ -150,20 +169,25 @@ def build_main_layout() -> html.Div:
                                     ),
                                     # Hidden alias kept so legacy callbacks targeting nav-intraday-ml don't break.
                                     dbc.NavLink(id="nav-intraday-ml", href="#", style={"display": "none"}),
+                                    # Drishti v1: hidden (revisit later).
+                                    # Reversible — remove the style={"display":"none"} to bring back.
                                     dbc.NavLink(
                                         [html.I(className="fas fa-layer-group me-1"), "Options"],
                                         id="nav-options",
                                         href="#",
+                                        style={"display": "none"},
                                     ),
                                     dbc.NavLink(
                                         [html.I(className="fas fa-chart-area me-1"), "Forecast"],
                                         id="nav-predictive",
                                         href="#",
+                                        style={"display": "none"},
                                     ),
                                     dbc.NavLink(
                                         [html.I(className="fas fa-brain me-1"), "Intelligence"],
                                         id="nav-intelligence",
                                         href="#",
+                                        style={"display": "none"},
                                     ),
                                     dbc.NavLink(
                                         [html.I(className="fas fa-chart-line me-1"), "P&L Ledger"],
@@ -906,10 +930,13 @@ def _build_live_signals_section():
             # propagate via a callback in callbacks.py.
             dbc.Tabs(
                 id="intraday-subtabs",
-                active_tab="sub-confluence",
+                active_tab="sub-ml",  # Drishti v1: ML is the default + only visible tab
                 className="mb-3",
                 children=[
-                    dbc.Tab(label="Confluence (Sniper)", tab_id="sub-confluence"),
+                    # Confluence (Sniper) hidden — vestigial surface, nothing populates it.
+                    # Reversible: remove tab_style to bring back.
+                    dbc.Tab(label="Confluence (Sniper)", tab_id="sub-confluence",
+                            tab_style={"display": "none"}),
                     dbc.Tab(label="ML (VWAP_MR / FPB / ORB_V2)", tab_id="sub-ml"),
                 ],
             ),

@@ -22,6 +22,13 @@ from signal_scanner.institutional_intel.config import safe_duckdb_connect
 cfg = DashboardConfig()
 logger = logging.getLogger(__name__)
 
+# Drishti v1 feature flag: AI convergence signals (PULLBACK_SNIPER /
+# SMART_MONEY_CONVERGENCE / SWING_CONFLUENCE / ACCUMULATION_BREAKOUT) currently
+# inject a +10% EV boost on Sniper Board rows. They've never been validated
+# against forward returns — disabled while we focus on validated edges.
+# Flip to True to bring them back unchanged.
+INJECT_CONVERGENCE_SIGNALS = False
+
 # Regime state display mapping
 REGIME_DISPLAY = {
     0: ("CRASH", "#ff4488", "All entries blocked"),
@@ -1141,6 +1148,8 @@ def _load_sniper_ideas(conn, store=None) -> list[dict]:
         "ACCUMULATION_BREAKOUT": "BREAKOUT",
     }
     try:
+        if not INJECT_CONVERGENCE_SIGNALS:
+            raise RuntimeError("INJECT_CONVERGENCE_SIGNALS=False (Drishti v1)")
         from signal_scanner.institutional_intel.reports.ai_signals import AISignalEngine
         engine = AISignalEngine()
         conv_signals = engine.detect_signals(
